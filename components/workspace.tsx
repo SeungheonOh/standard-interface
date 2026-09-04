@@ -1,266 +1,434 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useReducer, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type Action = 'arrange' | 'widget' | 'edit';
+type Phase = 'idle' | 'reading' | 'applying' | 'waiting' | 'done';
+type Run = {
+  action: Action;
+  target: boolean;
+  prompt: string;
+  steps: [string, string];
+  result: string;
+};
+type WorkspaceState = {
+  tiled: boolean;
+  widget: boolean;
+  largeType: boolean;
+  revision: number;
+  phase: Phase;
+  run: Run | null;
+  result: string | null;
+};
+type Event =
+  | { type: 'request'; action: Action }
+  | { type: 'advance' }
+  | { type: 'complete' }
+  | { type: 'reply'; tiled: boolean }
+  | { type: 'reset' };
+
+const initialState: WorkspaceState = {
+  tiled: false,
+  widget: false,
+  largeType: false,
+  revision: 0,
+  phase: 'idle',
+  run: null,
+  result: null,
+};
+
+function makeRun(action: Action, state: WorkspaceState): Run {
+  if (action === 'arrange') {
+    return {
+      action,
+      target: !state.tiled,
+      prompt: state.tiled
+        ? 'Give me room to spread things out.'
+        : 'Give my notes and code their own space.',
+      steps: [
+        'Inspect 2 open applications',
+        state.tiled
+          ? 'Restore the open canvas'
+          : 'Tile the application windows',
+      ],
+      result: state.tiled
+        ? 'Back on the canvas. Both applications are still open.'
+        : 'Both windows have their own space now. Nothing closed.',
+    };
+  }
+  if (action === 'widget') {
+    return {
+      action,
+      target: true,
+      prompt: 'Help me choose how to arrange this.',
+      steps: [
+        'Read the current layout',
+        'Create a choice widget in the workspace',
+      ],
+      result: 'I added a small interface. Choose a layout and I’ll apply it.',
+    };
+  }
+  return {
+    action,
+    target: !state.largeType,
+    prompt: state.largeType
+      ? 'Restore the original text size.'
+      : 'Make the notes and code easier to read.',
+    steps: [
+      'Inspect the current text settings',
+      state.largeType
+        ? 'Restore the text size'
+        : 'Increase text size in both windows',
+    ],
+    result: state.largeType
+      ? 'Original text size restored. No restart.'
+      : 'Larger text in both windows. The interface changed in place.',
+  };
+}
+
+function updateWorkspace(state: WorkspaceState, event: Event): WorkspaceState {
+  switch (event.type) {
+    case 'reset':
+      return initialState;
+    case 'request':
+      if (['reading', 'applying', 'waiting'].includes(state.phase))
+        return state;
+      return {
+        ...state,
+        phase: 'reading',
+        run: makeRun(event.action, state),
+        result: null,
+      };
+    case 'advance':
+      return state.phase === 'reading'
+        ? { ...state, phase: 'applying' }
+        : state;
+    case 'complete': {
+      if (state.phase !== 'applying' || !state.run) return state;
+      const { action, target, result } = state.run;
+      return {
+        ...state,
+        tiled: action === 'arrange' ? target : state.tiled,
+        widget: action === 'widget' ? target : state.widget,
+        largeType: action === 'edit' ? target : state.largeType,
+        revision: state.revision + 1,
+        phase: action === 'widget' ? 'waiting' : 'done',
+        result,
+      };
+    }
+    case 'reply':
+      if (state.phase !== 'waiting') return state;
+      return {
+        ...state,
+        tiled: event.tiled,
+        widget: false,
+        phase: 'done',
+        revision: state.revision + 1,
+        result: event.tiled
+          ? 'You chose a tiled layout. I arranged both windows.'
+          : 'You chose open canvas. I spread the windows out.',
+      };
+  }
+}
 
 function WindowTitle({
   children,
-  active = false,
+  detail,
 }: {
   children: ReactNode;
-  active?: boolean;
+  detail?: string;
 }) {
   return (
-    <div className={cn('window-title', active && 'active-title')}>
+    <div className="window-title">
       <span className="window-square" aria-hidden="true" />
       <span>{children}</span>
-      <span className="window-hatch" aria-hidden="true" />
+      {detail && <span className="window-detail">{detail}</span>}
     </div>
   );
 }
 
 export function Workspace() {
-  const [tiled, setTiled] = useState(false);
-  const [widget, setWidget] = useState(false);
-  const [largeType, setLargeType] = useState(false);
-  const [action, setAction] = useState<Action | null>(null);
-  const [reply, setReply] = useState<string | null>(null);
-  const [revision, setRevision] = useState(0);
+  const [state, dispatch] = useReducer(updateWorkspace, initialState);
+  const { tiled, widget, largeType, revision, phase, run, result } = state;
+  const busy = phase === 'reading' || phase === 'applying';
 
-  function perform(nextAction: Action) {
-    setAction(nextAction);
-    setReply(null);
-    setRevision((value) => value + 1);
-    if (nextAction === 'arrange') setTiled((value) => !value);
-    if (nextAction === 'widget') setWidget((value) => !value);
-    if (nextAction === 'edit') setLargeType((value) => !value);
-  }
+  // These short, cancellable steps illustrate a workflow; no LLM is connected.
+  useEffect(() => {
+    if (phase !== 'reading' && phase !== 'applying') return;
+    const timer = window.setTimeout(
+      () => dispatch({ type: phase === 'reading' ? 'advance' : 'complete' }),
+      650,
+    );
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
-  function reset() {
-    setTiled(false);
-    setWidget(false);
-    setLargeType(false);
-    setAction(null);
-    setReply(null);
-    setRevision(0);
-  }
-
+  const activity = {
+    idle: 'Ready',
+    reading: 'Inspecting',
+    applying: 'Applying',
+    waiting: 'Your turn',
+    done: 'Done',
+  }[phase];
   const status =
-    reply ??
-    (action === 'arrange'
-      ? tiled
-        ? 'Windows arranged. Same applications, a different view.'
-        : 'Back on the canvas. Nothing closed.'
-      : action === 'widget'
-        ? widget
-          ? 'A small interface, made for the next decision.'
-          : 'Widget removed. The workspace stays.'
-        : action === 'edit'
-          ? largeType
-            ? 'Text size updated in the running workspace.'
-            : 'Original text size restored.'
-          : 'A few windows. A live system. You decide what happens next.');
+    phase === 'reading'
+      ? 'Reading the workspace…'
+      : phase === 'applying'
+        ? run?.steps[1] + '…'
+        : (result ?? 'Choose a request to see the interface change.');
 
   return (
     <div className="workspace-frame">
       <div className="desktop-menubar">
-        <span className="desktop-name">
-          <span aria-hidden="true">▧</span> Ataxia
-        </span>
+        <span className="desktop-name">Ataxia</span>
         <span className="desktop-path">
-          World / {tiled ? 'Tiled' : 'Infinite canvas'}
+          {tiled ? 'Tiled layout' : 'Infinite canvas'}
         </span>
-        <Button variant="ghost" className="reset-button" onClick={reset}>
-          Reset <span aria-hidden="true">↺</span>
+        <Button
+          variant="ghost"
+          className="reset-button"
+          onClick={() => dispatch({ type: 'reset' })}
+        >
+          Reset demo <span aria-hidden="true">↺</span>
         </Button>
       </div>
-      <div
-        className={cn(
-          'workspace-stage',
-          tiled && 'is-tiled',
-          largeType && 'large-type',
-        )}
-      >
-        <div className="canvas-origin" aria-hidden="true">
-          <span>+</span> 0, 0
-        </div>
 
-        <div className="demo-window notes-window">
-          <WindowTitle>Field notes</WindowTitle>
-          <div className="notes-content">
-            <div className="document-meta">UNTITLED / 01</div>
-            <h3>A place to think.</h3>
-            <p>The notes, the code, the things still in progress.</p>
-            <div className="notes-rule" />
-            <p className="document-item">
-              <span>01.</span> Keep the context.
-            </p>
-            <p className="document-item">
-              <span>02.</span> Make your own tools.
-            </p>
-            <p className="document-item">
-              <span>03.</span> Leave room to change.
-            </p>
-            <div className="document-footer">
-              PERSONAL COMPUTING <span aria-hidden="true">↗</span>
-            </div>
+      <div className="workspace-body">
+        <aside className="agent-panel" aria-labelledby="agent-title">
+          <div className="agent-heading">
+            <span className="agent-monogram" aria-hidden="true">
+              ↗
+            </span>
+            <h3 id="agent-title">Workspace agent</h3>
+            <span className="demo-badge">Demo</span>
           </div>
-        </div>
-
-        <div className="demo-window code-demo-window">
-          <WindowTitle>world.lisp</WindowTitle>
-          <div className="editor-content">
-            <div className="editor-line">
-              <span>01</span>
-              <code>(defun my-workspace ()</code>
-            </div>
-            <div className="editor-line">
-              <span>02</span>
-              <code> (make-infinite-world))</code>
-            </div>
-            <div className="editor-line">
-              <span>03</span>
-              <code>&nbsp;</code>
-            </div>
-            <div className="editor-line">
-              <span>04</span>
-              <code className="code-muted">;; Start where you are.</code>
-            </div>
-            <div className="editor-line">
-              <span>05</span>
-              <code className="code-muted">;; Change what you need.</code>
-            </div>
-            <div className="editor-line">
-              <span>06</span>
-              <code>&nbsp;</code>
-            </div>
-            <div className="editor-line">
-              <span>07</span>
-              <code>
-                <span className="editor-caret" aria-hidden="true">
-                  {' '}
-                </span>
-              </code>
-            </div>
+          <div className="agent-presence">
+            <span
+              className={cn('presence-dot', busy && 'is-working')}
+              aria-hidden="true"
+            />
+            <span>{activity}</span>
+            <span className="agent-context">2 applications in view</span>
           </div>
-          <div className="editor-status">
-            COMMON LISP <span>Image: running</span>
+
+          <div className="agent-task" aria-busy={busy}>
+            {run ? (
+              <>
+                <div className="user-request">
+                  <span>You</span>
+                  <p>{run.prompt}</p>
+                </div>
+                <ol className="agent-steps" aria-label="Agent actions">
+                  {run.steps.map((step, index) => {
+                    const completed = index === 0 ? phase !== 'reading' : !busy;
+                    const current =
+                      index === 0 ? phase === 'reading' : phase === 'applying';
+                    return (
+                      <li
+                        key={step}
+                        className={cn(
+                          current && 'current-step',
+                          completed && 'completed-step',
+                        )}
+                      >
+                        <span className="step-mark" aria-hidden="true">
+                          {completed ? '✓' : current ? '·' : '—'}
+                        </span>
+                        <span>{step}</span>
+                        <span className="sr-only">
+                          {completed
+                            ? ', complete'
+                            : current
+                              ? ', in progress'
+                              : ', pending'}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+                {result && (
+                  <div className="agent-result">
+                    <span>Agent</span>
+                    <p>{result}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="agent-intro">
+                <p>What would make this workspace work better for you?</p>
+                <span>Try a request below.</span>
+              </div>
+            )}
           </div>
-        </div>
 
-        <div className="demo-window inspector-window">
-          <WindowTitle>Inspector</WindowTitle>
-          <dl>
-            <div>
-              <dt>world</dt>
-              <dd>{tiled ? 'tiled' : 'infinite'}</dd>
-            </div>
-            <div>
-              <dt>applications</dt>
-              <dd>2</dd>
-            </div>
-            <div>
-              <dt>type</dt>
-              <dd>{largeType ? 'larger' : 'original'}</dd>
-            </div>
-            <div>
-              <dt>revision</dt>
-              <dd>{String(revision).padStart(2, '0')}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className="demo-window agent-window">
-          <WindowTitle active>Agent → workspace</WindowTitle>
-          <div className="agent-content">
-            <span className="agent-label">DIRECT ACCESS. SMALL ACTIONS.</span>
-            <p>What would you like to change?</p>
+          <div className="agent-suggestions">
+            <span className="suggestion-label">
+              {phase === 'waiting'
+                ? 'Choose in the workspace to continue'
+                : 'Try a request'}
+            </span>
             <div className="agent-actions">
               <Button
-                className="system-button"
-                variant="outline"
-                onClick={() => perform('arrange')}
-                aria-pressed={tiled}
+                className="request-button"
+                variant="ghost"
+                disabled={busy || phase === 'waiting'}
+                onClick={() => dispatch({ type: 'request', action: 'arrange' })}
               >
-                <span>01</span>
-                {tiled ? 'Return to canvas' : 'Arrange my windows'}
-                <span aria-hidden="true">↵</span>
+                {tiled ? 'Spread things out' : 'Arrange my windows'}
+                <span aria-hidden="true">↗</span>
               </Button>
               <Button
-                className="system-button"
-                variant="outline"
-                onClick={() => perform('widget')}
-                aria-pressed={widget}
+                className="request-button"
+                variant="ghost"
+                disabled={busy || phase === 'waiting'}
+                onClick={() => dispatch({ type: 'request', action: 'widget' })}
               >
-                <span>02</span>
-                {widget ? 'Remove the widget' : 'Make me a widget'}
-                <span aria-hidden="true">↵</span>
+                Give me a choice <span aria-hidden="true">↗</span>
               </Button>
               <Button
-                className="system-button"
-                variant="outline"
-                onClick={() => perform('edit')}
-                aria-pressed={largeType}
+                className="request-button"
+                variant="ghost"
+                disabled={busy || phase === 'waiting'}
+                onClick={() => dispatch({ type: 'request', action: 'edit' })}
               >
-                <span>03</span>
-                {largeType ? 'Restore the type' : 'Make the type larger'}
-                <span aria-hidden="true">↵</span>
+                {largeType
+                  ? 'Restore the text size'
+                  : 'Make this easier to read'}
+                <span aria-hidden="true">↗</span>
               </Button>
             </div>
           </div>
-        </div>
+        </aside>
 
-        {widget && (
-          <div
-            className="demo-window choice-window"
-            aria-label="Agent-created layout choice"
-          >
-            <WindowTitle active>A quick question</WindowTitle>
-            <div className="choice-content">
-              <p>Keep this arrangement?</p>
-              <div className="choice-actions">
-                <Button
-                  className="system-button primary-button"
-                  onClick={() => {
-                    setReply(
-                      'You chose “Keep it.” The agent received your answer.',
-                    );
-                    setWidget(false);
-                  }}
-                >
-                  Keep it
-                </Button>
-                <Button
-                  variant="outline"
-                  className="system-button"
-                  onClick={() => {
-                    setReply(
-                      'You chose “Not yet.” The agent received your answer.',
-                    );
-                    setWidget(false);
-                  }}
-                >
-                  Not yet
-                </Button>
+        <div
+          className={cn(
+            'workspace-stage',
+            tiled && 'is-tiled',
+            largeType && 'large-type',
+          )}
+        >
+          <div className="canvas-origin" aria-hidden="true">
+            <span>+</span> 0, 0
+          </div>
+          <div className="demo-window notes-window">
+            <WindowTitle detail="notes">Field notes</WindowTitle>
+            <div className="notes-content">
+              <div className="document-meta">Untitled / 01</div>
+              <h3>A place to think.</h3>
+              <p>The notes, the code, the things still in progress.</p>
+              <div className="notes-rule" />
+              <p className="document-item">
+                <span>01.</span> Keep the context.
+              </p>
+              <p className="document-item">
+                <span>02.</span> Make your own tools.
+              </p>
+              <p className="document-item">
+                <span>03.</span> Leave room to change.
+              </p>
+              <div className="document-footer">
+                Your workspace <span aria-hidden="true">↗</span>
               </div>
-              <span>WIDGET → USER → AGENT</span>
             </div>
           </div>
-        )}
-        <div className="stage-coordinate" aria-hidden="true">
-          {tiled ? '[ TILE ]' : '[ ∞ ]'}
-          <span>REV. {String(revision).padStart(2, '0')}</span>
+
+          <div className="demo-window code-demo-window">
+            <WindowTitle detail="Lisp">world.lisp</WindowTitle>
+            <div className="editor-content">
+              <div className="editor-line">
+                <span>01</span>
+                <code>(defun my-workspace ()</code>
+              </div>
+              <div className="editor-line">
+                <span>02</span>
+                <code> (make-infinite-world))</code>
+              </div>
+              <div className="editor-line">
+                <span>03</span>
+                <code>&nbsp;</code>
+              </div>
+              <div className="editor-line">
+                <span>04</span>
+                <code className="code-muted">;; Start where you are.</code>
+              </div>
+              <div className="editor-line">
+                <span>05</span>
+                <code className="code-muted">;; Change what you need.</code>
+              </div>
+              <div className="editor-line">
+                <span>06</span>
+                <code>&nbsp;</code>
+              </div>
+              <div className="editor-line">
+                <span>07</span>
+                <code>
+                  <span className="editor-caret" aria-hidden="true">
+                    {' '}
+                  </span>
+                </code>
+              </div>
+            </div>
+            <div className="editor-status">
+              Common Lisp <span>Image running</span>
+            </div>
+          </div>
+
+          <div className="demo-window inspector-window">
+            <WindowTitle>World state</WindowTitle>
+            <dl>
+              <div>
+                <dt>layout</dt>
+                <dd>{tiled ? 'tiled' : 'infinite'}</dd>
+              </div>
+              <div>
+                <dt>text</dt>
+                <dd>{largeType ? 'larger' : 'original'}</dd>
+              </div>
+              <div>
+                <dt>revision</dt>
+                <dd>{String(revision).padStart(2, '0')}</dd>
+              </div>
+            </dl>
+          </div>
+
+          {widget && (
+            <div
+              className="demo-window choice-window"
+              aria-label="Agent-created layout choice"
+            >
+              <WindowTitle detail="from your agent">A quick choice</WindowTitle>
+              <div className="choice-content">
+                <p>How do you want to work?</p>
+                <div className="choice-actions">
+                  <Button
+                    className="system-button primary-button"
+                    onClick={() => dispatch({ type: 'reply', tiled: true })}
+                  >
+                    Tiled layout
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="system-button"
+                    onClick={() => dispatch({ type: 'reply', tiled: false })}
+                  >
+                    Open canvas
+                  </Button>
+                </div>
+                <span>Your answer changes the workspace.</span>
+              </div>
+            </div>
+          )}
+          <div className="stage-coordinate" aria-hidden="true">
+            <span>{tiled ? 'Tiled world' : 'Infinite world'}</span>
+            <span>rev. {String(revision).padStart(2, '0')}</span>
+          </div>
         </div>
       </div>
       <output className="desktop-status" aria-live="polite" aria-atomic="true">
         <span className="status-square" aria-hidden="true" />
         <span>{status}</span>
-        <span className="status-end">
-          {revision === 0 ? 'READY' : 'APPLIED'}
-        </span>
+        <span className="status-end">{activity}</span>
       </output>
     </div>
   );

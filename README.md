@@ -18,12 +18,13 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 ## Structure
 
 - `app/page.tsx`: page content and source links.
-- `app/globals.css`: monochrome theme, responsive layout, and stepped motion.
+- `app/globals.css`: monochrome theme, responsive layout, and restrained motion.
 - `components/workspace.tsx`: interactive browser model of the desktop.
 - `components/ui`: generated UI primitives, composed by the site.
 
-The browser model demonstrates arranging windows, adding a choice widget, and
-changing typography. It is not connected to Ataxia or an agent. Actual compositor
+The browser model demonstrates an agent inspecting the workspace, applying a
+requested layout or typography change, and asking for input through a widget.
+The workflow is scripted; it is not connected to Ataxia or an agent. Actual compositor
 source and live-image instructions are in https://github.com/SeungheonOh/ataxia.
 
 Type checking: `npx tsc --noEmit`. Site-specific lint:

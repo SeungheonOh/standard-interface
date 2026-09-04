@@ -36,8 +36,8 @@ export default function Home() {
       <main id="main">
         <section className="hero" aria-labelledby="product-name">
           <div className="hero-index">
-            <span>PERSONAL COMPUTING</span>
-            <span>NO. 001 / IN DEVELOPMENT</span>
+            <span>A programmable interface</span>
+            <span>In development</span>
           </div>
           <div className="hero-title-row">
             <h1 id="product-name">
@@ -45,23 +45,20 @@ export default function Home() {
             </h1>
             <div className="hero-statement">
               <p>
-                A computer for you.
+                An interface for you.
                 <br />
                 And your agents.
               </p>
-              <span className="small-arrow" aria-hidden="true">
-                ↙
-              </span>
             </div>
           </div>
           <div className="hero-bottom">
             <p>
-              A live, programmable desktop. Let agents work with your windows,
+              A live, programmable interface. Let agents work with your windows,
               <br className="desktop-break" /> build your tools, and change the
               interface while you use it.
             </p>
             <a className="action-link" href="#system">
-              Try the idea <Arrow />
+              Try the workspace <Arrow />
             </a>
           </div>
         </section>
@@ -73,8 +70,8 @@ export default function Home() {
         >
           <Workspace />
           <div className="figure-caption">
-            <span>FIG. 01 — A DESKTOP YOU CAN CHANGE.</span>
-            <span>Interactive model, not a live Ataxia session.</span>
+            <span>Your windows. Your tools. Your way of working.</span>
+            <span>Scripted demo, not a live agent or Ataxia session.</span>
           </div>
         </section>
 
@@ -84,15 +81,16 @@ export default function Home() {
           aria-labelledby="approach-title"
         >
           <div className="section-intro">
-            <span className="eyebrow">THE APPROACH</span>
+            <span className="eyebrow">The approach</span>
             <h2 id="approach-title">
-              The desktop is yours
+              The interface is yours
               <br />
               to define.
             </h2>
             <p>
               Not another app to work inside.
-              <br />A different way to work with the computer.
+              <br />
+              An interface that works with your applications.
             </p>
           </div>
           <div className="principles">
@@ -133,7 +131,7 @@ export default function Home() {
 
         <section className="under-the-hood" aria-labelledby="under-title">
           <div className="technical-copy">
-            <span className="eyebrow">NOT A CONFIGURATION FILE</span>
+            <span className="eyebrow">More than configuration</span>
             <h2 id="under-title">
               A running system.
               <br />
@@ -154,10 +152,10 @@ export default function Home() {
             <div className="window-title">
               <span className="window-square" aria-hidden="true" />
               <span>Listener</span>
-              <span className="window-hatch" aria-hidden="true" />
+              <span className="window-detail">Live image</span>
             </div>
             <div className="code-meta">
-              COMMON LISP <span>SLY / localhost:4005</span>
+              Common Lisp <span>SLY / localhost:4005</span>
             </div>
             <pre aria-label="Common Lisp notification example">
               <code>
@@ -195,7 +193,7 @@ export default function Home() {
 
       <footer className="site-footer">
         <div className="footer-statement">
-          Computers should be
+          Interfaces should be
           <br />
           <em>personal</em> again.
         </div>
