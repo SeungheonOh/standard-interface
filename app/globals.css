@@ -133,16 +133,29 @@ pre {
   color: #333;
 }
 .company-project {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 16px;
   min-height: 44px;
   padding: 8px 0;
-  border-bottom: 1px solid transparent;
   font: 1rem/1.5 var(--mono);
 }
+.company-project::after {
+  position: absolute;
+  right: 0;
+  bottom: 10px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  content: '';
+  visibility: hidden;
+}
 .company-project:is(:hover, :focus-visible) {
-  border-bottom-color: currentColor;
+  text-decoration: none;
+}
+.company-project:is(:hover, :focus-visible)::after {
+  visibility: visible;
 }
 .company-footer a:hover {
   text-decoration: underline;
