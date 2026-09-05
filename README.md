@@ -29,8 +29,9 @@ The hero cycles through form, structure, harmony, coherence, pattern, and creati
 every 2.4 seconds. Hover or keyboard focus adds “your” to the phrase. Activate the
 line to pause or resume; rotation also stops offscreen, in hidden tabs, and with
 reduced motion enabled. Word widths are reserved to keep the layout still.
-Word changes use a short, stepped vertical replacement; hover and focus insert
-the personalized phrase with a stepped typesetting effect. Only “your” uses
+Word changes briefly select the outgoing word, then replace it character by
+character behind a text cursor. Hover and focus type the two “your” insertions;
+the text itself never slides or fades. Only “your” uses
 the dark magenta (`#721045`) from the
 [Modus Operandi palette](https://github.com/protesilaos/modus-themes/blob/main/modus-themes.el).
 All effects stop under reduced motion; controls stay monochrome.

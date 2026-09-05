@@ -197,21 +197,34 @@ pre {
 }
 .disorder-line:is(:hover, :focus-visible) .disorder-copy.is-personal {
   visibility: visible;
-  animation: disorder-insert 180ms steps(4, end) both;
-}
-.disorder-line:not(:hover, :focus-visible) .disorder-copy:not(.is-personal) {
-  animation: disorder-return 160ms steps(4, end) both;
 }
 .disorder-your {
-  display: inline-block;
+  --character-count: 4;
   color: var(--personal-ink);
   font-weight: 600;
 }
-.disorder-line:is(:hover, :focus-visible) .disorder-your {
-  animation: disorder-stamp 160ms steps(3, end) both;
+.disorder-line:is(:hover, :focus-visible) .disorder-your::after {
+  animation: disorder-type 160ms steps(var(--character-count), end) both;
 }
-.disorder-line:is(:hover, :focus-visible) .disorder-your ~ .disorder-your {
-  animation-delay: 30ms;
+.disorder-line:is(:hover, :focus-visible)
+  .disorder-your
+  ~ .disorder-your::after {
+  animation-delay: 40ms;
+}
+.disorder-ink {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  overflow: hidden;
+}
+.disorder-ink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-left: 0.1em solid var(--foreground);
+  background: var(--paper);
+  transform: translateX(100%);
+  pointer-events: none;
 }
 .disorder-word {
   display: inline-grid;
@@ -226,61 +239,44 @@ pre {
   visibility: inherit;
 }
 .has-ticked .disorder-word > .is-current {
-  animation: disorder-word-in 180ms steps(4, end) both;
+  animation: disorder-replace 200ms step-end both;
+}
+.has-ticked .disorder-word > .is-current .disorder-ink::after {
+  animation: disorder-type 160ms steps(var(--character-count), end) 40ms both;
 }
 .disorder-word > .is-previous {
   visibility: inherit;
   opacity: 0;
-  animation: disorder-word-out 180ms steps(4, end) both;
+  animation: disorder-selection 200ms step-end both;
 }
-@keyframes disorder-word-in {
-  from {
-    transform: translateY(65%);
+.disorder-word > .is-previous .disorder-ink {
+  color: var(--paper);
+  background: var(--foreground);
+}
+@keyframes disorder-replace {
+  0% {
     opacity: 0;
   }
-  to {
-    transform: translateY(0);
+  20%,
+  100% {
     opacity: 1;
   }
 }
-@keyframes disorder-word-out {
-  from {
-    transform: translateY(0);
+@keyframes disorder-selection {
+  0% {
     opacity: 1;
   }
-  to {
-    transform: translateY(-65%);
+  20%,
+  100% {
     opacity: 0;
   }
 }
-@keyframes disorder-insert {
+@keyframes disorder-type {
   from {
-    transform: translateX(-0.4ch);
-    opacity: 0;
-  }
-  to {
     transform: translateX(0);
-    opacity: 1;
-  }
-}
-@keyframes disorder-return {
-  from {
-    transform: translateX(0.4ch);
-    opacity: 0;
   }
   to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-@keyframes disorder-stamp {
-  from {
-    transform: translateY(0.2em);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+    transform: translateX(100%);
   }
 }
 .action-link {

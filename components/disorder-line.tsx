@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -67,13 +67,13 @@ export function DisorderLine() {
             From{' '}
             {personal && (
               <>
-                <span className="disorder-your">your</span>{' '}
+                <span className="disorder-your disorder-ink">your</span>{' '}
               </>
             )}
             disorder comes{' '}
             {personal && (
               <>
-                <span className="disorder-your">your</span>{' '}
+                <span className="disorder-your disorder-ink">your</span>{' '}
               </>
             )}
             <span className="disorder-word">
@@ -87,7 +87,14 @@ export function DisorderLine() {
                       'is-previous',
                   )}
                 >
-                  {word}.
+                  <span
+                    className="disorder-ink"
+                    style={
+                      { '--character-count': word.length + 1 } as CSSProperties
+                    }
+                  >
+                    {word}.
+                  </span>
                 </span>
               ))}
             </span>
