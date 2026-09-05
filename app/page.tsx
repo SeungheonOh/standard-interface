@@ -15,9 +15,9 @@ export default function Home() {
           />
           <div className="company-copy">
             <h1>
-              Building a standard interface
+              <strong>Standard Interface</strong>
               <br />
-              for humans and AI.
+              for human and AI.
             </h1>
             <p>
               We make interfaces you can take apart and change. Not just colors
