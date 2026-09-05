@@ -22,7 +22,7 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 
 ## Structure
 
-- `app/page.tsx`: minimal company homepage and link to Ataxia.
+- `app/page.tsx`: company introduction, link to Ataxia, and company footer.
 - `app/ataxia/page.tsx`: Ataxia content, interactive examples, and source links.
 - `app/globals.css`: high-contrast theme, responsive layout, and restrained motion.
 - `components/workspace.tsx`: interactive canvas with an in-world agent terminal.
