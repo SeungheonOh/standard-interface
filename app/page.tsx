@@ -15,14 +15,14 @@ export default function Home() {
         Skip to content
       </a>
       <header className="site-header">
-        <Link href="/" className="brand" aria-label="Standard Interfaces home">
+        <Link href="/" className="brand" aria-label="Standard Interface home">
           <span className="brand-mark" aria-hidden="true">
             s<span>i</span>
           </span>
           <span>
             Standard
             <br />
-            Interfaces
+            Interface
           </span>
         </Link>
         <nav aria-label="Main navigation">
@@ -171,7 +171,7 @@ export default function Home() {
 
       <footer className="site-footer">
         <div className="footer-end">
-          <span>© {new Date().getFullYear()} Standard Interfaces</span>
+          <span>© {new Date().getFullYear()} Standard Interface</span>
           <a href={source}>
             Built in the open <Arrow diagonal />
           </a>

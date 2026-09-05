@@ -1,4 +1,4 @@
-# Standard Interfaces
+# Standard Interface
 
 The Ataxia website at https://standard-interface.com.
 
