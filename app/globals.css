@@ -206,11 +206,6 @@ pre {
 .disorder-line:is(:hover, :focus-visible) .disorder-your::after {
   animation: disorder-type 160ms steps(var(--character-count), end) both;
 }
-.disorder-line:is(:hover, :focus-visible)
-  .disorder-your
-  ~ .disorder-your::after {
-  animation-delay: 40ms;
-}
 .disorder-ink {
   position: relative;
   display: inline-block;

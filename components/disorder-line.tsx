@@ -64,13 +64,7 @@ export function DisorderLine() {
             key={String(personal)}
             className={cn('disorder-copy', personal && 'is-personal')}
           >
-            From{' '}
-            {personal && (
-              <>
-                <span className="disorder-your disorder-ink">your</span>{' '}
-              </>
-            )}
-            disorder comes{' '}
+            From disorder comes{' '}
             {personal && (
               <>
                 <span className="disorder-your disorder-ink">your</span>{' '}
