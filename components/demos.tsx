@@ -11,21 +11,21 @@ export function Demos() {
     <Tabs defaultValue="canvas" className="demo-tabs">
       <TabsList aria-label="Ataxia examples" className="demo-tab-list">
         <TabsTrigger value="workspace">01 / Agent + windows</TabsTrigger>
-        <TabsTrigger value="canvas">02 / Your world</TabsTrigger>
-        <TabsTrigger value="layouts">03 / World rules</TabsTrigger>
-        <TabsTrigger value="input">04 / Direct input</TabsTrigger>
+        <TabsTrigger value="input">02 / Direct input</TabsTrigger>
+        <TabsTrigger value="canvas">03 / Your world</TabsTrigger>
+        <TabsTrigger value="layouts">04 / World rules</TabsTrigger>
       </TabsList>
       <TabsContent value="workspace">
         <Workspace />
+      </TabsContent>
+      <TabsContent value="input">
+        <DirectInput />
       </TabsContent>
       <TabsContent value="canvas">
         <InfiniteCanvas />
       </TabsContent>
       <TabsContent value="layouts">
         <WorldLayouts />
-      </TabsContent>
-      <TabsContent value="input">
-        <DirectInput />
       </TabsContent>
     </Tabs>
   );

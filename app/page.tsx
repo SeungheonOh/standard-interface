@@ -20,9 +20,9 @@ export default function Home() {
               for human and AI.
             </h1>
             <p>
-              We make interfaces you can take apart and change. Not just colors
-              and settings: the layout, the tools, and the way you interact with
-              applications. Agents have that same access.
+              An interface you can take apart and change, directly or through an
+              agent. Not just colors and settings: the layout, the tools, and
+              the way you interact with applications.
             </p>
           </div>
           <Link className="company-project" href="/ataxia">
