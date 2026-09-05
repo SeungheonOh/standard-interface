@@ -3,14 +3,12 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Standard Interface',
-  description:
-    'Ataxia is a Common Lisp Wayland compositor. Arrange windows, create tools, and change behavior while applications stay open.',
+  description: 'Building a standard interface for humans and AI.',
   metadataBase: new URL('https://standard-interface.com'),
   alternates: { canonical: '/' },
   openGraph: {
     title: 'Standard Interface',
-    description:
-      'From disorder comes form. A Common Lisp Wayland compositor with agent access and runtime changes.',
+    description: 'Building a standard interface for humans and AI.',
     type: 'website',
     url: 'https://standard-interface.com',
     siteName: 'Standard Interface',

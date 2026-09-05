@@ -1,6 +1,7 @@
 # Standard Interface
 
-The Ataxia website at https://standard-interface.com.
+The Standard Interface homepage at https://standard-interface.com.
+The Ataxia project page lives at https://standard-interface.com/ataxia.
 
 The header and favicon share the outlined SVG in
 `public/brand/standard-interface-mark.svg`. Reusable artwork and a PNG export
@@ -21,7 +22,8 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 
 ## Structure
 
-- `app/page.tsx`: page content and source links.
+- `app/page.tsx`: minimal company homepage and link to Ataxia.
+- `app/ataxia/page.tsx`: Ataxia content, interactive examples, and source links.
 - `app/globals.css`: high-contrast theme, responsive layout, and restrained motion.
 - `components/workspace.tsx`: interactive canvas with an in-world agent terminal.
 - `components/infinite-canvas.tsx`: open-canvas navigation, project grouping, and task widgets.
