@@ -160,14 +160,13 @@ export default function Ataxia() {
                 <span className="code-muted">
                   ;; A message, in the running desktop.
                 </span>
-                {
-                  '\n\n(ataxia.sly-control:agent-apply\n  (lambda (kernel world)\n    (declare (ignore kernel))\n    (ataxia.infinite-world:show-notification\n      world '
-                }
+                {'\n\n'}(ataxia.sly-control:agent-apply{'\n'} (lambda (kernel
+                world){'\n'} (declare (ignore kernel)){'\n'}{' '}
+                (ataxia.infinite-world:show-notification{'\n'} world{' '}
                 <span className="code-string">
                   {'"Your workspace is ready."'}
                 </span>
-                {'\n      :title '}
-                <span className="code-string">{'"AGENT"'}</span>
+                {'\n'} :title <span className="code-string">{'"AGENT"'}</span>
                 )))
                 {'\n\n'}
                 <span className="code-muted">;; No restart.</span>
