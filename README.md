@@ -21,7 +21,9 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 - `app/globals.css`: high-contrast theme, responsive layout, and restrained motion.
 - `components/workspace.tsx`: interactive canvas with an in-world agent terminal.
 - `components/infinite-canvas.tsx`: open-canvas navigation, project grouping, and task widgets.
-- `components/demos.tsx`: accessible tabs between the two examples.
+- `components/world-layouts.tsx`: tiling, scrolling columns, and an orbital world with persistent objects.
+- `components/direct-input.tsx`: object inspection and pointer/keyboard delivery into a working search form.
+- `components/demos.tsx`: accessible tabs between the four examples.
 - `components/disorder-line.tsx`: rotating hero phrase with hover personalization.
 - `components/ui`: generated UI primitives, composed by the site.
 
@@ -55,9 +57,22 @@ project, or add a task widget to the same world. Its checkboxes return modeled
 events to the in-canvas agent. Repeated creation finds the existing widget;
 reset restores the six original objects and camera.
 
-Both harnesses use subtle dark text cues: navy for calls, rust for input, and
+The harnesses use subtle dark text cues: navy for calls, rust for input, and
 green for results. Controls, borders, and backgrounds stay monochrome; status
 text and tool names carry the meaning without relying on color.
+
+The world-rules example preserves the same three object IDs and scratchpad
+contents across tiling, scrolling columns, and a ring in depth. The arrow
+controls change the main pane or viewpoint. These are illustrative world
+definitions, not claims that every layout is a built-in Ataxia mode.
+
+The direct-input example measures the displayed application bounds, resolves a
+surface-local pointer position, types a chosen query, and submits a real local
+search. Run the sequence or step through each operation. User typing interrupts
+the agent; Pause and Reset cancel pending steps. The trace abbreviates Ataxia's
+object and `interactable-*` interfaces. It does not evaluate Lisp, deliver OS
+input, inspect browser internals, or connect to the user's desktop. A Wayland
+compositor exposes surfaces and input delivery, not arbitrary client DOM/state.
 
 The illustrated `agent-inspect`, `agent-apply`, and `wait-for-agent-events` flow
 comes from Ataxia's actual SLY interfaces, checked against the running VM. The
@@ -66,7 +81,7 @@ Actual compositor source and live-image instructions are at
 https://github.com/SeungheonOh/ataxia.
 
 Type checking: `npx tsc --noEmit`. Site-specific lint:
-`npx oxlint app components/workspace.tsx components/infinite-canvas.tsx components/demos.tsx components/disorder-line.tsx`.
+`npx oxlint app components/workspace.tsx components/infinite-canvas.tsx components/demos.tsx components/disorder-line.tsx components/world-layouts.tsx components/direct-input.tsx`.
 The scaffold's full lint command also
 checks generated UI primitives with pre-existing lint findings.
 

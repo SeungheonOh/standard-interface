@@ -49,7 +49,9 @@ export default function Home() {
         >
           <Demos />
           <div className="figure-caption">
-            <span>Window arrangement and agent-created tools.</span>
+            <span>
+              World definitions, agent-created tools, and direct input.
+            </span>
             <span>Interactive model. No live agent or VM connection.</span>
           </div>
         </section>
