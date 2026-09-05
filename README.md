@@ -2,6 +2,10 @@
 
 The Ataxia website at https://standard-interface.com.
 
+The header and favicon share the outlined SVG in
+`public/brand/standard-interface-mark.svg`. Reusable artwork and a PNG export
+are maintained at https://github.com/std-Interface/branding.
+
 ## Local development
 
 Use Node.js 22.13 or newer, then run:

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     url: 'https://standard-interface.com',
     siteName: 'Standard Interface',
   },
-  icons: { icon: '/favicon.svg' },
+  icons: { icon: '/brand/standard-interface-mark.svg' },
 };
 
 export default function RootLayout({

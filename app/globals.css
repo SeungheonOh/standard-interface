@@ -122,19 +122,10 @@ pre {
   line-height: 1.05;
 }
 .brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  border: 1px solid var(--border);
-  border-radius: 0;
+  display: block;
+  flex-shrink: 0;
   width: 42px;
   height: 42px;
-  font: 32px/1 var(--serif);
-  background: var(--paper);
-}
-.brand-mark span {
-  font-style: italic;
 }
 .site-header nav {
   display: flex;
@@ -1864,7 +1855,6 @@ pre {
   .brand-mark {
     width: 38px;
     height: 38px;
-    font-size: 29px;
   }
   .site-header nav {
     gap: 20px;

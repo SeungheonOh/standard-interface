@@ -1,5 +1,6 @@
 import { Demos } from '@/components/demos';
 import { DisorderLine } from '@/components/disorder-line';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const source = 'https://github.com/SeungheonOh/ataxia';
@@ -16,9 +17,14 @@ export default function Home() {
       </a>
       <header className="site-header">
         <Link href="/" className="brand" aria-label="Standard Interface home">
-          <span className="brand-mark" aria-hidden="true">
-            s<span>i</span>
-          </span>
+          <Image
+            className="brand-mark"
+            src="/brand/standard-interface-mark.svg"
+            width={42}
+            height={42}
+            alt=""
+            unoptimized
+          />
           <span>
             Standard
             <br />
