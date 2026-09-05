@@ -151,32 +151,7 @@ pre {
   margin-left: 4px;
 }
 .hero {
-  padding: 42px 0 36px;
-}
-.hero-index {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted-foreground);
-  font-size: 14px;
-}
-.hero-index span:last-child {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.hero-index span:last-child::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  background: var(--foreground);
-  border-radius: 0;
-}
-.hero-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 30px 0 20px;
-  gap: 24px;
+  padding: 64px 0 46px;
 }
 .hero h1 {
   font: 400 clamp(96px, 13.5vw, 172px)/0.94 var(--serif);
@@ -184,23 +159,54 @@ pre {
 .wordmark-period {
   margin-left: -8px;
 }
-.hero-statement {
-  padding-top: 18px;
+.disorder-line[data-slot='button'] {
+  display: inline-block;
+  height: auto;
+  max-width: 100%;
+  margin-top: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: 400 clamp(16px, 2vw, 21px)/1.7 var(--mono);
+  text-align: left;
+  white-space: normal;
+  transition: none;
 }
-.hero-statement p {
-  font: 400 30px/1.25 var(--sans);
+.disorder-line[data-slot='button']:active {
+  transform: none;
 }
-.hero-bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 28px;
-  align-items: end;
-  padding-top: 24px;
+.disorder-line[data-slot='button']:focus-visible {
+  outline: 1px solid var(--foreground);
+  outline-offset: 6px;
+  box-shadow: none;
 }
-.hero-bottom p {
-  font-size: 17px;
-  line-height: 1.65;
-  color: #555;
+.disorder-line-label {
+  display: grid;
+}
+.disorder-copy {
+  grid-area: 1 / 1;
+}
+.disorder-copy.is-personal {
+  visibility: hidden;
+}
+.disorder-line:is(:hover, :focus-visible) .disorder-copy {
+  visibility: hidden;
+}
+.disorder-line:is(:hover, :focus-visible) .disorder-copy.is-personal {
+  visibility: visible;
+}
+.disorder-word {
+  display: inline-grid;
+  vertical-align: bottom;
+}
+.disorder-word > span {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+.disorder-word > .is-current {
+  visibility: inherit;
 }
 .action-link {
   display: inline-flex;
@@ -1353,17 +1359,10 @@ pre {
 .site-footer {
   padding: 64px 0 28px;
 }
-.footer-statement {
-  font: 36px/1.18 var(--sans);
-}
-.footer-statement em {
-  font-family: var(--serif);
-}
 .footer-end {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  margin-top: 56px;
   font-size: 12px;
   line-height: 1.5;
   color: var(--muted-foreground);
@@ -1380,15 +1379,6 @@ pre {
 @media (max-width: 1000px) {
   .hero h1 {
     font-size: 132px;
-  }
-  .hero-statement p {
-    font-size: 25px;
-  }
-  .hero-bottom p {
-    font-size: 16px;
-  }
-  .desktop-break {
-    display: none;
   }
   .approach,
   .under-the-hood {
@@ -1422,26 +1412,10 @@ pre {
     display: none;
   }
   .hero {
-    padding-top: 30px;
-  }
-  .hero-title-row {
-    padding-top: 32px;
-    align-items: start;
+    padding-top: 44px;
   }
   .hero h1 {
     font-size: 106px;
-  }
-  .hero-statement {
-    padding-top: 10px;
-  }
-  .hero-statement p {
-    font-size: 23px;
-  }
-  .hero-bottom {
-    align-items: start;
-  }
-  .hero-bottom p {
-    max-width: 390px;
   }
   .action-link {
     gap: 16px;
@@ -1478,9 +1452,6 @@ pre {
     text-align: right;
     max-width: 210px;
   }
-  .footer-statement {
-    font-size: 32px;
-  }
 }
 @media (max-width: 560px) {
   .site-shell {
@@ -1489,35 +1460,11 @@ pre {
   .site-header nav a:first-child {
     display: none;
   }
-  .hero-index {
-    font-size: 12px;
-    gap: 12px;
-  }
-  .hero-title-row {
-    flex-direction: column;
-    gap: 26px;
-    padding-top: 22px;
-  }
   .hero h1 {
     font-size: clamp(96px, 26vw, 132px);
   }
-  .hero-statement {
-    padding: 0;
-  }
-  .hero-statement p {
-    font-size: 28px;
-    line-height: 1.2;
-  }
-  .hero-bottom {
-    flex-direction: column;
-    padding-top: 2px;
-    gap: 22px;
-  }
-  .hero-bottom p {
-    font-size: 16px;
-  }
   .hero {
-    padding-bottom: 22px;
+    padding-bottom: 30px;
   }
   .action-link {
     padding: 13px 16px;
@@ -1557,7 +1504,6 @@ pre {
   .footer-end {
     flex-direction: column-reverse;
     gap: 20px;
-    margin-top: 35px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

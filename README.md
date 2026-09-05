@@ -22,7 +22,13 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 - `components/workspace.tsx`: interactive canvas with an in-world agent terminal.
 - `components/infinite-canvas.tsx`: open-canvas navigation, project grouping, and task widgets.
 - `components/demos.tsx`: accessible tabs between the two examples.
+- `components/disorder-line.tsx`: rotating hero phrase with hover personalization.
 - `components/ui`: generated UI primitives, composed by the site.
+
+The hero cycles through form, structure, harmony, coherence, pattern, and creation
+every 2.4 seconds. Hover or keyboard focus adds “your” to the phrase. Activate the
+line to pause or resume; rotation also stops offscreen, in hidden tabs, and with
+reduced motion enabled. Word widths are reserved to keep the layout still.
 
 The demo is a browser model, not a screenshot, live agent, or VM connection.
 Its terminal and reference window share one canvas. Drag either title bar, or
@@ -53,7 +59,7 @@ Actual compositor source and live-image instructions are at
 https://github.com/SeungheonOh/ataxia.
 
 Type checking: `npx tsc --noEmit`. Site-specific lint:
-`npx oxlint app components/workspace.tsx components/infinite-canvas.tsx components/demos.tsx`.
+`npx oxlint app components/workspace.tsx components/infinite-canvas.tsx components/demos.tsx components/disorder-line.tsx`.
 The scaffold's full lint command also
 checks generated UI primitives with pre-existing lint findings.
 
