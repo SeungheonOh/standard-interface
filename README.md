@@ -18,7 +18,7 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 ## Structure
 
 - `app/page.tsx`: page content and source links.
-- `app/globals.css`: monochrome theme, responsive layout, and restrained motion.
+- `app/globals.css`: high-contrast theme, responsive layout, and restrained motion.
 - `components/workspace.tsx`: interactive canvas with an in-world agent terminal.
 - `components/infinite-canvas.tsx`: open-canvas navigation, project grouping, and task widgets.
 - `components/demos.tsx`: accessible tabs between the two examples.
@@ -31,12 +31,20 @@ the current model coordinates and adds an in-world choice widget. Approving
 arranges the existing windows; cancelling preserves their positions. Reset
 clears the interaction. Narrow screens use a stacked layout.
 
-The open-canvas example pans with pointer dragging or arrow keys, zooms with
-the viewport controls, and focuses a window when its title is selected. Agent
+The open plane is one example of a world, not a requirement of Ataxia. The page
+also describes tiling, scrolling columns, and custom geometry as possible world
+representations. Drag any window's title to move it independently, including
+agent-created widgets. Arrow keys move the focused window; Shift moves farther.
+Movement accounts for viewport zoom, and releasing a drag does not recenter the
+camera. Drag empty space to pan; click a title to focus it. Agent
 requests find compositor-related objects without moving them, group windows by
 project, or add a task widget to the same world. Its checkboxes return modeled
 events to the in-canvas agent. Repeated creation finds the existing widget;
 reset restores the six original objects and camera.
+
+Both harnesses use subtle dark text cues: navy for calls, rust for input, and
+green for results. Controls, borders, and backgrounds stay monochrome; status
+text and tool names carry the meaning without relying on color.
 
 The illustrated `agent-inspect`, `agent-apply`, and `wait-for-agent-events` flow
 comes from Ataxia's actual SLY interfaces, checked against the running VM. The

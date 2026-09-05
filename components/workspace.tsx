@@ -295,7 +295,7 @@ export function Workspace() {
                     </strong>
                     <pre>make-agent-widget → #3 LayoutChoice</pre>
                   </div>
-                  <div className="harness-call">
+                  <div className="harness-call cue-input">
                     <strong>
                       <span>↳</span> wait-for-agent-events
                     </strong>
@@ -338,7 +338,16 @@ export function Workspace() {
               )}
             </div>
             <div className="harness-footer">
-              <span>
+              <span
+                className={cn(
+                  'harness-status',
+                  waiting
+                    ? 'cue-waiting'
+                    : phase === 'ready'
+                      ? 'cue-ready'
+                      : 'cue-done',
+                )}
+              >
                 {waiting
                   ? 'Waiting for input'
                   : phase === 'ready'

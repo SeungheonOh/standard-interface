@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Ataxia — Standard Interfaces',
   description:
-    'A live, programmable interface for people and agents. Change your workspace, build your tools, and redefine the interface while you use it.',
+    'A programmable interface for people and agents. Define your own world—tiling, scrolling, or your own geometry—and change it while it runs.',
   metadataBase: new URL('https://standard-interface.com'),
   alternates: { canonical: '/' },
   openGraph: {

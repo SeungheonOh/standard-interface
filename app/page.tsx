@@ -108,10 +108,11 @@ export default function Home() {
             <article className="principle">
               <span className="number">02</span>
               <div>
-                <h3>Personal by construction.</h3>
+                <h3>Your world, your rules.</h3>
                 <p>
-                  A tiled workspace. An infinite canvas. Your own shortcuts and
-                  tools. Change the behavior to fit the way you think.
+                  Tiling, scrolling columns, an infinite plane, or a different
+                  geometry. Define how applications are placed, rendered, and
+                  interacted with—not just how the desktop looks.
                 </p>
               </div>
             </article>

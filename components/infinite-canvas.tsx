@@ -20,7 +20,12 @@ type Surface = {
 };
 type Camera = { x: number; y: number; zoom: number };
 type Rect = { x: number; y: number; width: number; height: number };
-type Activity = { request: string; tool: string; result: string };
+type Activity = {
+  request: string;
+  tool: string;
+  result: string;
+  status: 'ready' | 'done' | 'waiting' | 'event';
+};
 
 const original: Surface[] = [
   {
@@ -131,9 +136,10 @@ const original: Surface[] = [
 ];
 const initialCamera: Camera = { x: 100, y: 180, zoom: 0.76 };
 const initialActivity: Activity = {
-  request: 'A workspace larger than the screen.',
+  request: 'Work with the world, not a fixed desktop.',
   tool: 'world access',
   result: '6 objects · 3 projects\nChoose a request below.',
+  status: 'ready',
 };
 const tasks = [
   'Inspect the surface tree',
@@ -163,6 +169,16 @@ export function InfiniteCanvas() {
     y: number;
     camera: Camera;
   } | null>(null);
+  const surfaceDrag = useRef<{
+    id: string;
+    pointer: number;
+    x: number;
+    y: number;
+    origin: { x: number; y: number };
+    zoom: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressSurfaceClick = useRef<string | null>(null);
   const [size, setSize] = useState({ width: 1100, height: 680 });
   const [camera, setCamera] = useState(initialCamera);
   const [surfaces, setSurfaces] = useState(original);
@@ -170,6 +186,7 @@ export function InfiniteCanvas() {
   const [selected, setSelected] = useState<string[]>([]);
   const [grouped, setGrouped] = useState(false);
   const [panning, setPanning] = useState(false);
+  const [draggingSurface, setDraggingSurface] = useState<string | null>(null);
   const [checked, setChecked] = useState<boolean[]>([false, false, false]);
   const [sequence, setSequence] = useState(0);
   const compact = size.width <= 760;
@@ -219,6 +236,7 @@ export function InfiniteCanvas() {
     setActivity({
       request: 'Find my ' + project.toLowerCase() + ' work.',
       tool: 'agent-inspect → set-output-camera',
+      status: 'done',
       result:
         found.length +
         ' matching objects\n' +
@@ -250,6 +268,7 @@ export function InfiniteCanvas() {
     setActivity({
       request: 'Group the windows by project.',
       tool: 'agent-apply / set-window-position',
+      status: 'done',
       result:
         projects
           .map(
@@ -268,6 +287,13 @@ export function InfiniteCanvas() {
     if (existing) {
       fit([existing]);
       setSelected([existing.id]);
+      setActivity({
+        request: 'Find the task widget.',
+        tool: 'agent-inspect → set-output-camera',
+        result:
+          'Found the existing task widget.\nViewport moved. No duplicate created.',
+        status: 'done',
+      });
       return;
     }
     const group = extent(
@@ -291,6 +317,7 @@ export function InfiniteCanvas() {
     setActivity({
       request: 'Make a small checklist for this work.',
       tool: 'agent-apply / make-agent-widget',
+      status: 'waiting',
       result:
         'Added a Slint-style task widget.\nIt lives on the canvas, too.\n\nWaiting for checkbox events.',
     });
@@ -305,6 +332,7 @@ export function InfiniteCanvas() {
     setActivity({
       request: 'Keep track of the work with me.',
       tool: 'wait-for-agent-events',
+      status: next.every(Boolean) ? 'done' : 'event',
       result:
         '(:source "tasks" :name "toggle"\n :value "' +
         (index + 1) +
@@ -319,7 +347,7 @@ export function InfiniteCanvas() {
   }
 
   function panStart(event: PointerEvent<HTMLButtonElement>) {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || surfaceDrag.current) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = {
       pointer: event.pointerId,
@@ -335,7 +363,60 @@ export function InfiniteCanvas() {
     setPanning(false);
   }
 
+  function startSurfaceDrag(
+    event: PointerEvent<HTMLButtonElement>,
+    surface: Surface,
+  ) {
+    if (event.button !== 0 || drag.current || surfaceDrag.current) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    suppressSurfaceClick.current = null;
+    surfaceDrag.current = {
+      id: surface.id,
+      pointer: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      origin: { x: surface.x, y: surface.y },
+      zoom: camera.zoom,
+      moved: false,
+    };
+    setDraggingSurface(surface.id);
+    setSelected([surface.id]);
+  }
+
+  function moveSurface(event: PointerEvent<HTMLButtonElement>) {
+    const start = surfaceDrag.current;
+    if (!start || start.pointer !== event.pointerId) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (!start.moved && Math.hypot(deltaX, deltaY) < 3) return;
+    start.moved = true;
+    setSurfaces((current) =>
+      current.map((surface) =>
+        surface.id === start.id
+          ? {
+              ...surface,
+              x: start.origin.x + deltaX / start.zoom,
+              y: start.origin.y + deltaY / start.zoom,
+            }
+          : surface,
+      ),
+    );
+  }
+
+  function endSurfaceDrag(pointer: number) {
+    const start = surfaceDrag.current;
+    if (!start || start.pointer !== pointer) return;
+    suppressSurfaceClick.current = start.moved ? start.id : null;
+    surfaceDrag.current = null;
+    setDraggingSurface(null);
+  }
+
   function reset() {
+    drag.current = null;
+    surfaceDrag.current = null;
+    suppressSurfaceClick.current = null;
+    setPanning(false);
+    setDraggingSurface(null);
     setSurfaces(original);
     setCamera(initialCamera);
     setActivity(initialActivity);
@@ -347,6 +428,10 @@ export function InfiniteCanvas() {
 
   return (
     <div className="canvas-demo">
+      <div className="world-representation-note">
+        <h3>Choose how your world works.</h3>
+        <p>Tiling. Scrolling columns. An open plane. Your own geometry.</p>
+      </div>
       <div
         className={cn('infinite-scene', panning && 'is-panning')}
         ref={stage}
@@ -391,7 +476,7 @@ export function InfiniteCanvas() {
         />
 
         <div className="canvas-camera-bar">
-          <span>infinite-world</span>
+          <span>example / open plane</span>
           <span>{surfaces.length} objects</span>
         </div>
         <div
@@ -434,6 +519,7 @@ export function InfiniteCanvas() {
                 'canvas-surface',
                 selected.includes(surface.id) && 'is-selected',
                 surface.kind === 'tasks' && 'task-surface',
+                draggingSurface === surface.id && 'is-dragging',
               )}
               aria-label={surface.title}
               style={{
@@ -445,13 +531,53 @@ export function InfiniteCanvas() {
               <Button
                 variant="ghost"
                 className="canvas-surface-title"
-                aria-label={'Focus ' + surface.title}
+                aria-label={
+                  'Move ' +
+                  surface.title +
+                  '. Drag or use arrow keys; click to focus.'
+                }
                 onFocus={() => {
+                  if (surfaceDrag.current) return;
                   fit([surface]);
                   setSelected([surface.id]);
                 }}
                 onClick={() => {
+                  if (suppressSurfaceClick.current === surface.id) {
+                    suppressSurfaceClick.current = null;
+                    return;
+                  }
                   fit([surface]);
+                  setSelected([surface.id]);
+                }}
+                onPointerDown={(event) => startSurfaceDrag(event, surface)}
+                onPointerMove={moveSurface}
+                onPointerUp={(event) => endSurfaceDrag(event.pointerId)}
+                onPointerCancel={(event) => endSurfaceDrag(event.pointerId)}
+                onLostPointerCapture={(event) =>
+                  endSurfaceDrag(event.pointerId)
+                }
+                onKeyDown={(event) => {
+                  const directions: Record<string, [number, number]> = {
+                    ArrowLeft: [-1, 0],
+                    ArrowRight: [1, 0],
+                    ArrowUp: [0, -1],
+                    ArrowDown: [0, 1],
+                  };
+                  const direction = directions[event.key];
+                  if (!direction) return;
+                  event.preventDefault();
+                  const distance = (event.shiftKey ? 48 : 16) / camera.zoom;
+                  setSurfaces((current) =>
+                    current.map((item) =>
+                      item.id === surface.id
+                        ? {
+                            ...item,
+                            x: item.x + direction[0] * distance,
+                            y: item.y + direction[1] * distance,
+                          }
+                        : item,
+                    ),
+                  );
                   setSelected([surface.id]);
                 }}
               >
@@ -547,7 +673,16 @@ export function InfiniteCanvas() {
         <aside className="canvas-agent" aria-label="Canvas agent">
           <div className="canvas-agent-title">
             <span>agent / world access</span>
-            <span>SLY</span>
+            <span className={'harness-status cue-' + activity.status}>
+              {
+                {
+                  ready: 'Ready',
+                  done: 'Complete',
+                  waiting: 'Needs input',
+                  event: 'Input received',
+                }[activity.status]
+              }
+            </span>
           </div>
           <div className="canvas-agent-body">
             <p className="canvas-agent-request">
@@ -555,7 +690,7 @@ export function InfiniteCanvas() {
               {activity.request}
             </p>
             <div
-              className="canvas-agent-log"
+              className={'canvas-agent-log cue-' + activity.status}
               aria-live="polite"
               aria-atomic="true"
             >
@@ -584,11 +719,9 @@ export function InfiniteCanvas() {
         </span>
       </div>
       <div className="world-caption">
-        <span>
-          Pan the canvas. Find a project. Build a tool where you need it.
-        </span>
+        <span>Drag a window to move it. Drag empty space to pan.</span>
         <Button variant="ghost" className="world-reset" onClick={reset}>
-          Reset canvas ↺
+          Reset example ↺
         </Button>
       </div>
     </div>

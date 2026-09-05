@@ -265,6 +265,12 @@ pre {
   color: #777;
 }
 
+.workspace-demo,
+.canvas-demo {
+  --cue-call: #17365d;
+  --cue-input: #6e2e19;
+  --cue-result: #1c4b36;
+}
 .workspace-demo {
   container: workspace / inline-size;
 }
@@ -354,7 +360,7 @@ pre {
   border-bottom: 1px solid #dedede;
 }
 .harness-command > span:first-child {
-  color: #777;
+  color: var(--cue-call);
 }
 .harness-target {
   margin-left: auto;
@@ -367,6 +373,7 @@ pre {
   padding: 20px 0;
 }
 .harness-request > span {
+  color: var(--cue-input);
   font-size: 22px;
   line-height: 1.2;
 }
@@ -410,9 +417,9 @@ pre {
 .harness-call strong {
   display: block;
   font-weight: 500;
+  color: var(--cue-call);
 }
 .harness-call strong > span {
-  color: #666;
   margin-right: 6px;
 }
 .harness-call pre {
@@ -423,11 +430,15 @@ pre {
   color: #666;
   font-variant-numeric: tabular-nums;
 }
+.harness-call.cue-input pre {
+  color: var(--cue-input);
+}
 .harness-outcome {
   display: flex;
   gap: 9px;
   padding-top: 2px;
   font-size: 12px;
+  color: var(--cue-result);
 }
 .harness-footer {
   display: flex;
@@ -437,9 +448,17 @@ pre {
   border-top: 1px solid #ddd;
   padding: 13px 0;
 }
-.harness-footer > span {
+.harness-status {
+  --cue: var(--cue-call);
   font: 12px var(--mono);
-  color: #666;
+  color: var(--cue);
+}
+.cue-waiting,
+.cue-event {
+  --cue: var(--cue-input);
+}
+.cue-done {
+  --cue: var(--cue-result);
 }
 .harness-run[data-slot='button'] {
   background: #181818;
@@ -794,6 +813,25 @@ pre {
 .canvas-demo {
   container: canvas / inline-size;
 }
+.world-representation-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  background: white;
+}
+.world-representation-note h3 {
+  font: 500 18px/1.4 var(--sans);
+  text-wrap: balance;
+}
+.world-representation-note p {
+  font: 14px/1.6 var(--sans);
+  text-wrap: pretty;
+}
 .canvas-pan-surface[data-slot='button'] {
   position: absolute;
   inset: 0;
@@ -861,6 +899,11 @@ pre {
 .canvas-surface.is-selected {
   outline: 2px solid #111;
   outline-offset: 5px;
+  z-index: 20;
+}
+.canvas-surface.is-dragging {
+  transition: none;
+  z-index: 30;
 }
 .canvas-surface-title[data-slot='button'] {
   height: 33px;
@@ -876,6 +919,12 @@ pre {
   color: #111;
   font: 12px var(--mono);
   transition: none;
+  cursor: grab;
+  touch-action: none;
+}
+.canvas-surface-title[data-slot='button']:active {
+  cursor: grabbing;
+  transform: none;
 }
 .canvas-surface-title[data-slot='button']:hover {
   background: #e4e4e4;
@@ -962,14 +1011,16 @@ pre {
 }
 .canvas-agent-title {
   display: flex;
+  align-items: center;
+  gap: 10px;
   justify-content: space-between;
   padding: 10px 14px;
   background: #181818;
   color: white;
   font: 12px var(--mono);
 }
-.canvas-agent-title > span:last-child {
-  color: #aaa;
+.canvas-agent-title .harness-status {
+  color: #ddd;
 }
 .canvas-agent-body {
   padding: 18px;
@@ -982,19 +1033,28 @@ pre {
   font: 14px/1.5 var(--mono);
 }
 .canvas-agent-request > span {
+  color: var(--cue-input);
   font-size: 22px;
   line-height: 1;
 }
 .canvas-agent-log {
+  --cue: var(--cue-call);
   margin: 16px 0;
   min-height: 128px;
   padding-left: 10px;
   border-left: 1px solid #ccc;
 }
+.canvas-agent-log.cue-done {
+  --cue: var(--cue-result);
+}
+.canvas-agent-log:is(.cue-waiting, .cue-event) {
+  --cue: var(--cue-input);
+}
 .canvas-agent-log strong {
   display: block;
   font: 12px/1.6 var(--mono);
   overflow-wrap: anywhere;
+  color: var(--cue);
 }
 .canvas-agent-log pre {
   margin: 8px 0 0;
