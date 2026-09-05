@@ -56,7 +56,7 @@ export function DisorderLine() {
     >
       <span className="sr-only">
         From disorder comes form, structure, harmony, coherence, pattern,
-        creation. Pause word rotation.
+        creation. {paused ? 'Resume' : 'Pause'} word rotation.
       </span>
       <span className="disorder-line-label" aria-hidden="true">
         {[false, true].map((personal) => (

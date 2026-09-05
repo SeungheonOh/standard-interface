@@ -196,18 +196,8 @@ export function DirectInput() {
 
   return (
     <div className="direct-input-demo example-demo">
-      <div className="world-representation-note">
-        <h3>Read state. Send input.</h3>
-        <p>Object access and computer input, in the same harness.</p>
-      </div>
       <div className="example-scene">
         <div className="input-workbench">
-          <div className="example-toolbar">
-            <span>seat / agent-0</span>
-            <span>
-              {state.cursor ? 'pointer + keyboard → #28' : 'no focused surface'}
-            </span>
-          </div>
           <section
             ref={windowRef}
             className="input-application"

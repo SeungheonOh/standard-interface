@@ -92,16 +92,8 @@ export function WorldLayouts() {
 
   return (
     <div className="world-layout-demo example-demo">
-      <div className="world-representation-note">
-        <h3>Same objects. Different rules.</h3>
-        <p>Change the layout, the camera, or the geometry.</p>
-      </div>
       <div className="example-scene">
         <div className="layout-workbench">
-          <div className="example-toolbar">
-            <span>world / {layout}</span>
-            <span>3 objects · same IDs</span>
-          </div>
           <div className={cn('layout-stage', 'layout-' + layout)}>
             {layout === 'orbit' && (
               <div className="orbit-guide" aria-hidden="true" />

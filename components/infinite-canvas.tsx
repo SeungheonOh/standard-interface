@@ -428,10 +428,6 @@ export function InfiniteCanvas() {
 
   return (
     <div className="canvas-demo">
-      <div className="world-representation-note">
-        <h3>Choose how your world works.</h3>
-        <p>Tiling. Scrolling columns. An open plane. Your own geometry.</p>
-      </div>
       <div
         className={cn('infinite-scene', panning && 'is-panning')}
         ref={stage}
@@ -475,10 +471,6 @@ export function InfiniteCanvas() {
           }}
         />
 
-        <div className="canvas-camera-bar">
-          <span>example / open plane</span>
-          <span>{surfaces.length} objects</span>
-        </div>
         <div
           className="canvas-plane"
           style={{
