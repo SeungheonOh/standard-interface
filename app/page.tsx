@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -25,9 +24,10 @@ export default function Home() {
               the way you interact with applications.
             </p>
           </div>
-          <Link className="company-project" href="/ataxia">
+          {/* oxlint-disable-next-line next/no-html-link-for-pages -- Use browser navigation rather than the client router. */}
+          <a className="company-project" href="/ataxia">
             Ataxia <span aria-hidden="true">→</span>
-          </Link>
+          </a>
         </div>
       </main>
       <footer className="company-footer">

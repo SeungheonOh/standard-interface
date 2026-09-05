@@ -2,7 +2,6 @@ import { Demos } from '@/components/demos';
 import { DisorderLine } from '@/components/disorder-line';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Ataxia — Standard Interface',
@@ -32,7 +31,8 @@ export default function Ataxia() {
         Skip to content
       </a>
       <header className="site-header">
-        <Link href="/" className="brand" aria-label="Standard Interface home">
+        {/* oxlint-disable-next-line next/no-html-link-for-pages -- Use browser navigation rather than the client router. */}
+        <a href="/" className="brand" aria-label="Standard Interface home">
           <Image
             className="brand-mark"
             src="/brand/standard-interface-mark.svg"
@@ -46,7 +46,7 @@ export default function Ataxia() {
             <br />
             Interface
           </span>
-        </Link>
+        </a>
         <nav aria-label="Main navigation">
           <a href="#system">The system</a>
           <a href="#approach">The approach</a>
