@@ -26,10 +26,7 @@ export function DisorderLine() {
     function sync() {
       clearInterval(timer);
       if (visible && !document.hidden && !motion.matches && !paused) {
-        timer = setInterval(
-          () => setIndex((current) => (current + 1) % words.length),
-          2400,
-        );
+        timer = setInterval(() => setIndex((current) => current + 1), 2400);
       }
     }
 
@@ -52,7 +49,7 @@ export function DisorderLine() {
     <Button
       ref={element}
       variant="ghost"
-      className="disorder-line"
+      className={cn('disorder-line', index > 0 && 'has-ticked')}
       aria-pressed={paused}
       title={paused ? 'Resume word rotation' : 'Pause word rotation'}
       onClick={() => setPaused((current) => !current)}
@@ -67,12 +64,28 @@ export function DisorderLine() {
             key={String(personal)}
             className={cn('disorder-copy', personal && 'is-personal')}
           >
-            From {personal && 'your '}disorder comes {personal && 'your '}
+            From{' '}
+            {personal && (
+              <>
+                <span className="disorder-your">your</span>{' '}
+              </>
+            )}
+            disorder comes{' '}
+            {personal && (
+              <>
+                <span className="disorder-your">your</span>{' '}
+              </>
+            )}
             <span className="disorder-word">
               {words.map((word, position) => (
                 <span
                   key={word}
-                  className={cn(position === index && 'is-current')}
+                  className={cn(
+                    position === index % words.length && 'is-current',
+                    index > 0 &&
+                      position === (index - 1) % words.length &&
+                      'is-previous',
+                  )}
                 >
                   {word}.
                 </span>
