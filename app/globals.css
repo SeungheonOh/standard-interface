@@ -115,6 +115,9 @@ pre {
 .company-intro h1 strong {
   font-size: 1.15em;
   font-weight: 400;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.12em;
 }
 .company-copy {
   display: grid;
