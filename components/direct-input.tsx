@@ -282,11 +282,11 @@ export function DirectInput() {
               </span>
             )}
           </section>
-          <p className="input-hint">
-            This form works. Type into it yourself to take over.
-          </p>
         </div>
-        <aside className="example-agent" aria-label="Direct input harness">
+        <aside
+          className="example-agent"
+          aria-label="Direct Agentic Control harness"
+        >
           <div className="canvas-agent-title">
             <span>agent / object + input access</span>
             <span>model</span>
@@ -362,7 +362,6 @@ export function DirectInput() {
         </aside>
       </div>
       <div className="world-caption">
-        <span>Illustrated input delivery. No connection to your desktop.</span>
         <Button
           variant="ghost"
           className="world-reset"

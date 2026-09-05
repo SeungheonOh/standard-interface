@@ -11,7 +11,7 @@ export function Demos() {
     <Tabs defaultValue="canvas" className="demo-tabs">
       <TabsList aria-label="Ataxia examples" className="demo-tab-list">
         <TabsTrigger value="workspace">01 / Agent + windows</TabsTrigger>
-        <TabsTrigger value="input">02 / Direct input</TabsTrigger>
+        <TabsTrigger value="input">02 / Direct Agentic Control</TabsTrigger>
         <TabsTrigger value="canvas">03 / Your world</TabsTrigger>
         <TabsTrigger value="layouts">04 / World rules</TabsTrigger>
       </TabsList>

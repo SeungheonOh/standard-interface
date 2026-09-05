@@ -72,7 +72,7 @@ contents across tiling, scrolling columns, and a ring in depth. The arrow
 controls change the main pane or viewpoint. These are illustrative world
 definitions, not claims that every layout is a built-in Ataxia mode.
 
-The direct-input example measures the displayed application bounds, resolves a
+The Direct Agentic Control example measures the displayed application bounds, resolves a
 surface-local pointer position, types a chosen query, and submits a real local
 search. Run the sequence or step through each operation. User typing interrupts
 the agent; Pause and Reset cancel pending steps. The trace abbreviates Ataxia's

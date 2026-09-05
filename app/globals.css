@@ -116,7 +116,7 @@ pre {
   font-size: 1.15em;
   font-weight: 400;
   text-decoration: underline;
-  text-decoration-thickness: 1px;
+  text-decoration-thickness: 3px;
   text-underline-offset: 0.12em;
 }
 .company-copy {
@@ -760,11 +760,9 @@ pre {
 }
 .world-caption {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  gap: 20px;
   padding: 16px 0 0;
-  font-size: 14px;
 }
 .world-reset[data-slot='button'] {
   height: auto;
@@ -808,9 +806,6 @@ pre {
   }
   .scene-title-detail {
     font-size: 12px;
-  }
-  .world-hint {
-    display: none;
   }
 }
 @container workspace (max-width: 700px) {
@@ -865,13 +860,6 @@ pre {
     bottom: 18px;
     left: 20px;
   }
-  .world-caption {
-    align-items: start;
-    font-size: 14px;
-  }
-  .world-caption > span {
-    max-width: 270px;
-  }
 }
 @container workspace (max-width: 380px) {
   .world-scene {
@@ -892,10 +880,6 @@ pre {
   .harness-footer {
     flex-wrap: wrap;
   }
-  .world-caption {
-    flex-direction: column;
-    gap: 8px;
-  }
   .world-reset[data-slot='button'] {
     padding-left: 0;
   }
@@ -906,6 +890,7 @@ pre {
 }
 .demo-tab-list[data-slot='tabs-list'] {
   display: grid;
+  align-items: stretch;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 100%;
   height: auto;
@@ -1623,11 +1608,6 @@ pre {
   font: 14px/1.5 var(--sans);
   color: #555;
 }
-.input-hint {
-  margin: -6px 24px 22px;
-  font: 12px/1.5 var(--mono);
-  color: #555;
-}
 .input-trace {
   min-height: 350px;
   padding: 24px 0 8px;
@@ -1713,9 +1693,6 @@ pre {
   .input-document h4 {
     font-size: 30px;
   }
-  .input-hint {
-    margin: 0 14px 18px;
-  }
   .input-results {
     min-height: 360px;
   }
@@ -1739,15 +1716,6 @@ pre {
   }
 }
 
-.figure-caption {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding-top: 16px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--muted-foreground);
-}
 .approach {
   display: grid;
   grid-template-columns: 1fr 1.35fr;
@@ -1964,10 +1932,6 @@ pre {
     flex-direction: column;
     gap: 20px;
   }
-  .figure-caption span:last-child {
-    text-align: right;
-    max-width: 210px;
-  }
 }
 @media (max-width: 560px) {
   .site-shell {
@@ -1984,14 +1948,6 @@ pre {
   }
   .action-link {
     padding: 13px 16px;
-  }
-  .figure-caption {
-    flex-direction: column;
-    gap: 3px;
-  }
-  .figure-caption span:last-child {
-    max-width: none;
-    text-align: left;
   }
   .section-intro h2 {
     font-size: 30px;

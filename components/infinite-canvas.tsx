@@ -719,7 +719,6 @@ export function InfiniteCanvas() {
         </span>
       </div>
       <div className="world-caption">
-        <span>Drag a window to move it. Drag empty space to pan.</span>
         <Button variant="ghost" className="world-reset" onClick={reset}>
           Reset example ↺
         </Button>

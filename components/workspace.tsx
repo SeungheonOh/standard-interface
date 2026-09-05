@@ -447,13 +447,9 @@ export function Workspace() {
 
         <div className="world-bottom">
           <span>1280 × 800 · world coordinates</span>
-          <span className="world-hint">
-            Drag the title bars. Then run the request.
-          </span>
         </div>
       </div>
       <div className="world-caption">
-        <span>Move a window. Run the request. Choose a layout.</span>
         <Button
           variant="ghost"
           className="world-reset"

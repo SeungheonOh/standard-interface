@@ -239,7 +239,6 @@ export function WorldLayouts() {
         </aside>
       </div>
       <div className="world-caption">
-        <span>The world defines placement, rendering, and input mapping.</span>
         <Button
           variant="ghost"
           className="world-reset"
