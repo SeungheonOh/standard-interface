@@ -1,4 +1,4 @@
-import { Workspace } from '@/components/workspace';
+import { Demos } from '@/components/demos';
 import Link from 'next/link';
 
 const source = 'https://github.com/SeungheonOh/ataxia';
@@ -58,7 +58,7 @@ export default function Home() {
               interface while you use it.
             </p>
             <a className="action-link" href="#system">
-              Try the workspace <Arrow />
+              See it in use <Arrow />
             </a>
           </div>
         </section>
@@ -66,12 +66,12 @@ export default function Home() {
         <section
           id="system"
           className="system-section"
-          aria-label="An interactive model of Ataxia"
+          aria-label="An interactive model of an agent working in Ataxia"
         >
-          <Workspace />
+          <Demos />
           <div className="figure-caption">
-            <span>Your windows. Your tools. Your way of working.</span>
-            <span>Scripted demo, not a live agent or Ataxia session.</span>
+            <span>Inspect the world. Ask in the world. Change the world.</span>
+            <span>Interactive model. No live agent or VM connection.</span>
           </div>
         </section>
 

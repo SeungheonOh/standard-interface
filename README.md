@@ -19,16 +19,34 @@ identified in `.openai/hosting.json`; no credentials belong in this repository.
 
 - `app/page.tsx`: page content and source links.
 - `app/globals.css`: monochrome theme, responsive layout, and restrained motion.
-- `components/workspace.tsx`: interactive browser model of the desktop.
+- `components/workspace.tsx`: interactive canvas with an in-world agent terminal.
+- `components/infinite-canvas.tsx`: open-canvas navigation, project grouping, and task widgets.
+- `components/demos.tsx`: accessible tabs between the two examples.
 - `components/ui`: generated UI primitives, composed by the site.
 
-The browser model demonstrates an agent inspecting the workspace, applying a
-requested layout or typography change, and asking for input through a widget.
-The workflow is scripted; it is not connected to Ataxia or an agent. Actual compositor
-source and live-image instructions are in https://github.com/SeungheonOh/ataxia.
+The demo is a browser model, not a screenshot, live agent, or VM connection.
+Its terminal and reference window share one canvas. Drag either title bar, or
+focus it and use the arrow keys; Shift moves farther. The agent request inspects
+the current model coordinates and adds an in-world choice widget. Approving
+arranges the existing windows; cancelling preserves their positions. Reset
+clears the interaction. Narrow screens use a stacked layout.
+
+The open-canvas example pans with pointer dragging or arrow keys, zooms with
+the viewport controls, and focuses a window when its title is selected. Agent
+requests find compositor-related objects without moving them, group windows by
+project, or add a task widget to the same world. Its checkboxes return modeled
+events to the in-canvas agent. Repeated creation finds the existing widget;
+reset restores the six original objects and camera.
+
+The illustrated `agent-inspect`, `agent-apply`, and `wait-for-agent-events` flow
+comes from Ataxia's actual SLY interfaces, checked against the running VM. The
+browser performs no Lisp evaluation, model inference, or remote desktop access.
+Actual compositor source and live-image instructions are at
+https://github.com/SeungheonOh/ataxia.
 
 Type checking: `npx tsc --noEmit`. Site-specific lint:
-`npx oxlint app components/workspace.tsx`. The scaffold's full lint command also
+`npx oxlint app components/workspace.tsx components/infinite-canvas.tsx components/demos.tsx`.
+The scaffold's full lint command also
 checks generated UI primitives with pre-existing lint findings.
 
 Source is maintained on `master` at

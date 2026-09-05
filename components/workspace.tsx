@@ -1,435 +1,458 @@
 'use client';
 
-import { useEffect, useReducer, type ReactNode } from 'react';
+import {
+  useReducer,
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type Action = 'arrange' | 'widget' | 'edit';
-type Phase = 'idle' | 'reading' | 'applying' | 'waiting' | 'done';
-type Run = {
-  action: Action;
-  target: boolean;
-  prompt: string;
-  steps: [string, string];
-  result: string;
-};
-type WorkspaceState = {
-  tiled: boolean;
-  widget: boolean;
-  largeType: boolean;
-  revision: number;
+type WindowId = 'reference' | 'agent';
+type Point = { x: number; y: number };
+type Phase = 'ready' | 'waiting' | 'applied' | 'cancelled';
+type State = {
   phase: Phase;
-  run: Run | null;
-  result: string | null;
+  positions: Record<WindowId, Point>;
+  inspected: Record<WindowId, Point> | null;
+  sequence: number;
+  raised: WindowId;
 };
-type Event =
-  | { type: 'request'; action: Action }
-  | { type: 'advance' }
-  | { type: 'complete' }
-  | { type: 'reply'; tiled: boolean }
+type Action =
+  | { type: 'move'; id: WindowId; position: Point }
+  | { type: 'raise'; id: WindowId }
+  | { type: 'run' }
+  | { type: 'reply'; apply: boolean }
   | { type: 'reset' };
 
-const initialState: WorkspaceState = {
-  tiled: false,
-  widget: false,
-  largeType: false,
-  revision: 0,
-  phase: 'idle',
-  run: null,
-  result: null,
+const initial: State = {
+  phase: 'ready',
+  positions: { reference: { x: 64, y: 78 }, agent: { x: 552, y: 172 } },
+  inspected: null,
+  sequence: 0,
+  raised: 'agent',
 };
+const arranged = { reference: { x: 32, y: 78 }, agent: { x: 600, y: 78 } };
+const point = (value: Point) =>
+  '(' + Math.round(value.x) + ', ' + Math.round(value.y) + ')';
 
-function makeRun(action: Action, state: WorkspaceState): Run {
-  if (action === 'arrange') {
-    return {
-      action,
-      target: !state.tiled,
-      prompt: state.tiled
-        ? 'Give me room to spread things out.'
-        : 'Give my notes and code their own space.',
-      steps: [
-        'Inspect 2 open applications',
-        state.tiled
-          ? 'Restore the open canvas'
-          : 'Tile the application windows',
-      ],
-      result: state.tiled
-        ? 'Back on the canvas. Both applications are still open.'
-        : 'Both windows have their own space now. Nothing closed.',
-    };
-  }
-  if (action === 'widget') {
-    return {
-      action,
-      target: true,
-      prompt: 'Help me choose how to arrange this.',
-      steps: [
-        'Read the current layout',
-        'Create a choice widget in the workspace',
-      ],
-      result: 'I added a small interface. Choose a layout and I’ll apply it.',
-    };
-  }
-  return {
-    action,
-    target: !state.largeType,
-    prompt: state.largeType
-      ? 'Restore the original text size.'
-      : 'Make the notes and code easier to read.',
-    steps: [
-      'Inspect the current text settings',
-      state.largeType
-        ? 'Restore the text size'
-        : 'Increase text size in both windows',
-    ],
-    result: state.largeType
-      ? 'Original text size restored. No restart.'
-      : 'Larger text in both windows. The interface changed in place.',
-  };
-}
-
-function updateWorkspace(state: WorkspaceState, event: Event): WorkspaceState {
-  switch (event.type) {
+function reduce(state: State, action: Action): State {
+  switch (action.type) {
     case 'reset':
-      return initialState;
-    case 'request':
-      if (['reading', 'applying', 'waiting'].includes(state.phase))
-        return state;
+      return initial;
+    case 'raise':
+      return { ...state, raised: action.id };
+    case 'move':
       return {
         ...state,
-        phase: 'reading',
-        run: makeRun(event.action, state),
-        result: null,
+        positions: { ...state.positions, [action.id]: action.position },
+        raised: action.id,
       };
-    case 'advance':
-      return state.phase === 'reading'
-        ? { ...state, phase: 'applying' }
-        : state;
-    case 'complete': {
-      if (state.phase !== 'applying' || !state.run) return state;
-      const { action, target, result } = state.run;
-      return {
-        ...state,
-        tiled: action === 'arrange' ? target : state.tiled,
-        widget: action === 'widget' ? target : state.widget,
-        largeType: action === 'edit' ? target : state.largeType,
-        revision: state.revision + 1,
-        phase: action === 'widget' ? 'waiting' : 'done',
-        result,
-      };
-    }
+    case 'run':
+      return state.phase === 'waiting'
+        ? state
+        : { ...state, inspected: state.positions, phase: 'waiting' };
     case 'reply':
       if (state.phase !== 'waiting') return state;
       return {
         ...state,
-        tiled: event.tiled,
-        widget: false,
-        phase: 'done',
-        revision: state.revision + 1,
-        result: event.tiled
-          ? 'You chose a tiled layout. I arranged both windows.'
-          : 'You chose open canvas. I spread the windows out.',
+        phase: action.apply ? 'applied' : 'cancelled',
+        sequence: state.sequence + 1,
+        positions: action.apply ? arranged : state.positions,
       };
   }
 }
 
-function WindowTitle({
-  children,
+function SceneWindow({
+  id,
+  title,
   detail,
+  position,
+  raised,
+  move,
+  raise,
+  children,
 }: {
+  id: WindowId;
+  title: string;
+  detail: string;
+  position: Point;
+  raised: boolean;
+  move: (position: Point) => void;
+  raise: () => void;
   children: ReactNode;
-  detail?: string;
 }) {
+  const frame = useRef<HTMLDivElement>(null);
+  const drag = useRef<{
+    pointer: number;
+    x: number;
+    y: number;
+    start: Point;
+    width: number;
+    height: number;
+    maxX: number;
+    maxY: number;
+  } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  function bounds() {
+    const element = frame.current;
+    const stage = element?.closest('[data-world]')?.getBoundingClientRect();
+    if (!element || !stage || stage.width <= 700) return null;
+    const window = element.getBoundingClientRect();
+    return {
+      width: stage.width,
+      height: stage.height,
+      maxX: Math.max(0, 1280 - (window.width / stage.width) * 1280),
+      maxY: Math.max(0, 800 - (window.height / stage.height) * 800),
+    };
+  }
+
+  function start(event: PointerEvent<HTMLButtonElement>) {
+    if (event.button !== 0) return;
+    const limits = bounds();
+    if (!limits) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drag.current = {
+      pointer: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      start: position,
+      ...limits,
+    };
+    setDragging(true);
+    raise();
+  }
+
+  function finish() {
+    drag.current = null;
+    setDragging(false);
+  }
+
   return (
-    <div className="window-title">
-      <span className="window-square" aria-hidden="true" />
-      <span>{children}</span>
-      {detail && <span className="window-detail">{detail}</span>}
+    <div
+      className={cn(
+        'scene-window-anchor',
+        id,
+        raised && 'is-raised',
+        dragging && 'is-dragging',
+      )}
+      style={{
+        transform:
+          'translate(' +
+          (position.x / 1280) * 100 +
+          '%, ' +
+          (position.y / 800) * 100 +
+          '%)',
+      }}
+    >
+      <div className="scene-window" ref={frame}>
+        <Button
+          variant="ghost"
+          className="scene-title"
+          aria-label={
+            'Move ' + title + '. On a wide screen, drag or use the arrow keys.'
+          }
+          onClick={raise}
+          onPointerDown={start}
+          onPointerMove={(event) => {
+            const active = drag.current;
+            if (!active || active.pointer !== event.pointerId) return;
+            move({
+              x: Math.max(
+                0,
+                Math.min(
+                  active.maxX,
+                  active.start.x +
+                    ((event.clientX - active.x) / active.width) * 1280,
+                ),
+              ),
+              y: Math.max(
+                0,
+                Math.min(
+                  active.maxY,
+                  active.start.y +
+                    ((event.clientY - active.y) / active.height) * 800,
+                ),
+              ),
+            });
+          }}
+          onPointerUp={finish}
+          onPointerCancel={finish}
+          onLostPointerCapture={finish}
+          onKeyDown={(event) => {
+            const directions: Record<string, Point> = {
+              ArrowLeft: { x: -1, y: 0 },
+              ArrowRight: { x: 1, y: 0 },
+              ArrowUp: { x: 0, y: -1 },
+              ArrowDown: { x: 0, y: 1 },
+            };
+            const direction = directions[event.key];
+            const limits = bounds();
+            if (!direction || !limits) return;
+            event.preventDefault();
+            const distance = event.shiftKey ? 40 : 12;
+            move({
+              x: Math.max(
+                0,
+                Math.min(limits.maxX, position.x + direction.x * distance),
+              ),
+              y: Math.max(
+                0,
+                Math.min(limits.maxY, position.y + direction.y * distance),
+              ),
+            });
+          }}
+        >
+          <span className="scene-window-mark" aria-hidden="true" />
+          <span>{title}</span>
+          <span className="scene-title-detail">{detail}</span>
+        </Button>
+        {children}
+      </div>
     </div>
   );
 }
 
 export function Workspace() {
-  const [state, dispatch] = useReducer(updateWorkspace, initialState);
-  const { tiled, widget, largeType, revision, phase, run, result } = state;
-  const busy = phase === 'reading' || phase === 'applying';
-
-  // These short, cancellable steps illustrate a workflow; no LLM is connected.
-  useEffect(() => {
-    if (phase !== 'reading' && phase !== 'applying') return;
-    const timer = window.setTimeout(
-      () => dispatch({ type: phase === 'reading' ? 'advance' : 'complete' }),
-      650,
-    );
-    return () => window.clearTimeout(timer);
-  }, [phase]);
-
-  const activity = {
-    idle: 'Ready',
-    reading: 'Inspecting',
-    applying: 'Applying',
-    waiting: 'Your turn',
-    done: 'Done',
-  }[phase];
-  const status =
-    phase === 'reading'
-      ? 'Reading the workspace…'
-      : phase === 'applying'
-        ? run?.steps[1] + '…'
-        : (result ?? 'Choose a request to see the interface change.');
+  const [state, dispatch] = useReducer(reduce, initial);
+  const { phase, inspected, sequence } = state;
+  const waiting = phase === 'waiting';
+  const source =
+    'https://github.com/SeungheonOh/ataxia/blob/main/docs/AGENT_OPERATIONS.md';
+  const windowProps = (id: WindowId) => ({
+    id,
+    position: state.positions[id],
+    raised: state.raised === id,
+    move: (position: Point) => dispatch({ type: 'move', id, position }),
+    raise: () => dispatch({ type: 'raise', id }),
+  });
 
   return (
-    <div className="workspace-frame">
-      <div className="desktop-menubar">
-        <span className="desktop-name">Ataxia</span>
-        <span className="desktop-path">
-          {tiled ? 'Tiled layout' : 'Infinite canvas'}
-        </span>
-        <Button
-          variant="ghost"
-          className="reset-button"
-          onClick={() => dispatch({ type: 'reset' })}
+    <div className="workspace-demo">
+      <div
+        className={cn('world-scene', phase === 'applied' && 'is-arranged')}
+        data-world
+      >
+        <span className="world-label">ataxia / infinite-world</span>
+
+        <SceneWindow
+          {...windowProps('agent')}
+          title="foot"
+          detail="agent / local session"
         >
-          Reset demo <span aria-hidden="true">↺</span>
-        </Button>
-      </div>
-
-      <div className="workspace-body">
-        <aside className="agent-panel" aria-labelledby="agent-title">
-          <div className="agent-heading">
-            <span className="agent-monogram" aria-hidden="true">
-              ↗
-            </span>
-            <h3 id="agent-title">Workspace agent</h3>
-            <span className="demo-badge">Demo</span>
-          </div>
-          <div className="agent-presence">
-            <span
-              className={cn('presence-dot', busy && 'is-working')}
-              aria-hidden="true"
-            />
-            <span>{activity}</span>
-            <span className="agent-context">2 applications in view</span>
-          </div>
-
-          <div className="agent-task" aria-busy={busy}>
-            {run ? (
-              <>
-                <div className="user-request">
-                  <span>You</span>
-                  <p>{run.prompt}</p>
+          <div className="harness">
+            <div className="harness-command">
+              <span>$</span> ataxia-eval{' '}
+              <span className="harness-target">ataxia · SLY :4005</span>
+            </div>
+            <div className="harness-request">
+              <span aria-hidden="true">›</span>
+              <p>
+                Put the reference beside my terminal.
+                <br />
+                Ask me before moving anything.
+              </p>
+            </div>
+            <div className="harness-log" aria-live="polite" aria-atomic="true">
+              {!inspected ? (
+                <div className="harness-ready">
+                  <p>World access</p>
+                  <dl>
+                    <div>
+                      <dt>world</dt>
+                      <dd>infinite-world</dd>
+                    </div>
+                    <div>
+                      <dt>objects</dt>
+                      <dd>2 available</dd>
+                    </div>
+                    <div>
+                      <dt>tools</dt>
+                      <dd>inspect · apply · events</dd>
+                    </div>
+                  </dl>
+                  <span>Run the request to see the agent work.</span>
                 </div>
-                <ol className="agent-steps" aria-label="Agent actions">
-                  {run.steps.map((step, index) => {
-                    const completed = index === 0 ? phase !== 'reading' : !busy;
-                    const current =
-                      index === 0 ? phase === 'reading' : phase === 'applying';
-                    return (
-                      <li
-                        key={step}
-                        className={cn(
-                          current && 'current-step',
-                          completed && 'completed-step',
-                        )}
-                      >
-                        <span className="step-mark" aria-hidden="true">
-                          {completed ? '✓' : current ? '·' : '—'}
-                        </span>
-                        <span>{step}</span>
-                        <span className="sr-only">
-                          {completed
-                            ? ', complete'
-                            : current
-                              ? ', in progress'
-                              : ', pending'}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-                {result && (
-                  <div className="agent-result">
-                    <span>Agent</span>
-                    <p>{result}</p>
+              ) : (
+                <>
+                  <div className="harness-call">
+                    <strong>
+                      <span>↳</span> agent-inspect
+                    </strong>
+                    <pre>
+                      {'#28  firefox  ' +
+                        point(inspected.reference) +
+                        '\n#11  foot     ' +
+                        point(inspected.agent)}
+                    </pre>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="agent-intro">
-                <p>What would make this workspace work better for you?</p>
-                <span>Try a request below.</span>
-              </div>
-            )}
-          </div>
-
-          <div className="agent-suggestions">
-            <span className="suggestion-label">
-              {phase === 'waiting'
-                ? 'Choose in the workspace to continue'
-                : 'Try a request'}
-            </span>
-            <div className="agent-actions">
+                  <div className="harness-call">
+                    <strong>
+                      <span>↳</span> agent-apply
+                    </strong>
+                    <pre>make-agent-widget → #3 LayoutChoice</pre>
+                  </div>
+                  <div className="harness-call">
+                    <strong>
+                      <span>↳</span> wait-for-agent-events
+                    </strong>
+                    <pre>
+                      {waiting
+                        ? 'Waiting for your choice in the world.'
+                        : '(:source 3 :name "' +
+                          (phase === 'applied' ? 'arrange' : 'cancel') +
+                          '"\n :sequence ' +
+                          sequence +
+                          ')'}
+                    </pre>
+                  </div>
+                  {phase === 'applied' && (
+                    <div className="harness-call">
+                      <strong>
+                        <span>↳</span> agent-apply
+                      </strong>
+                      <pre>
+                        {'set-window-position\n#28 → ' +
+                          point(arranged.reference) +
+                          '\n#11 → ' +
+                          point(arranged.agent)}
+                      </pre>
+                    </div>
+                  )}
+                  {phase === 'applied' && (
+                    <div className="harness-outcome">
+                      <span aria-hidden="true">✓</span>
+                      <p>Layout applied. Both windows stay open.</p>
+                    </div>
+                  )}
+                  {phase === 'cancelled' && (
+                    <div className="harness-outcome">
+                      <span aria-hidden="true">—</span>
+                      <p>Nothing moved. Your layout is unchanged.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="harness-footer">
+              <span>
+                {waiting
+                  ? 'Waiting for input'
+                  : phase === 'ready'
+                    ? 'Ready'
+                    : 'Request complete'}
+              </span>
               <Button
-                className="request-button"
-                variant="ghost"
-                disabled={busy || phase === 'waiting'}
-                onClick={() => dispatch({ type: 'request', action: 'arrange' })}
+                className="harness-run"
+                aria-disabled={waiting}
+                onClick={() => dispatch({ type: 'run' })}
               >
-                {tiled ? 'Spread things out' : 'Arrange my windows'}
-                <span aria-hidden="true">↗</span>
-              </Button>
-              <Button
-                className="request-button"
-                variant="ghost"
-                disabled={busy || phase === 'waiting'}
-                onClick={() => dispatch({ type: 'request', action: 'widget' })}
-              >
-                Give me a choice <span aria-hidden="true">↗</span>
-              </Button>
-              <Button
-                className="request-button"
-                variant="ghost"
-                disabled={busy || phase === 'waiting'}
-                onClick={() => dispatch({ type: 'request', action: 'edit' })}
-              >
-                {largeType
-                  ? 'Restore the text size'
-                  : 'Make this easier to read'}
-                <span aria-hidden="true">↗</span>
+                {waiting
+                  ? 'Choose in the widget'
+                  : phase === 'ready'
+                    ? 'Run request ↵'
+                    : 'Run again ↵'}
               </Button>
             </div>
           </div>
-        </aside>
+        </SceneWindow>
 
-        <div
-          className={cn(
-            'workspace-stage',
-            tiled && 'is-tiled',
-            largeType && 'large-type',
-          )}
+        {waiting && (
+          <section className="native-choice" aria-labelledby="choice-title">
+            <div className="native-choice-title">
+              <span>AGENT / LAYOUT</span>
+              <span>Slint widget</span>
+            </div>
+            <div className="native-choice-body">
+              <h3 id="choice-title">Give both windows their own space?</h3>
+              <p>Same workspace. Nothing closes.</p>
+              <div className="native-choice-actions">
+                <Button
+                  className="native-apply"
+                  onClick={() => dispatch({ type: 'reply', apply: true })}
+                >
+                  Apply layout <span aria-hidden="true">↗</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="native-cancel"
+                  onClick={() => dispatch({ type: 'reply', apply: false })}
+                >
+                  Not now
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <SceneWindow
+          {...windowProps('reference')}
+          title="Agent operations"
+          detail="Firefox"
         >
-          <div className="canvas-origin" aria-hidden="true">
-            <span>+</span> 0, 0
+          <div className="reference-location">
+            <span aria-hidden="true">↶</span>
+            <span>ataxia / docs / AGENT_OPERATIONS.md</span>
           </div>
-          <div className="demo-window notes-window">
-            <WindowTitle detail="notes">Field notes</WindowTitle>
-            <div className="notes-content">
-              <div className="document-meta">Untitled / 01</div>
-              <h3>A place to think.</h3>
-              <p>The notes, the code, the things still in progress.</p>
-              <div className="notes-rule" />
-              <p className="document-item">
-                <span>01.</span> Keep the context.
-              </p>
-              <p className="document-item">
-                <span>02.</span> Make your own tools.
-              </p>
-              <p className="document-item">
-                <span>03.</span> Leave room to change.
-              </p>
-              <div className="document-footer">
-                Your workspace <span aria-hidden="true">↗</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="demo-window code-demo-window">
-            <WindowTitle detail="Lisp">world.lisp</WindowTitle>
-            <div className="editor-content">
-              <div className="editor-line">
-                <span>01</span>
-                <code>(defun my-workspace ()</code>
-              </div>
-              <div className="editor-line">
-                <span>02</span>
-                <code> (make-infinite-world))</code>
-              </div>
-              <div className="editor-line">
-                <span>03</span>
-                <code>&nbsp;</code>
-              </div>
-              <div className="editor-line">
-                <span>04</span>
-                <code className="code-muted">;; Start where you are.</code>
-              </div>
-              <div className="editor-line">
-                <span>05</span>
-                <code className="code-muted">;; Change what you need.</code>
-              </div>
-              <div className="editor-line">
-                <span>06</span>
-                <code>&nbsp;</code>
-              </div>
-              <div className="editor-line">
-                <span>07</span>
-                <code>
-                  <span className="editor-caret" aria-hidden="true">
-                    {' '}
-                  </span>
-                </code>
-              </div>
-            </div>
-            <div className="editor-status">
-              Common Lisp <span>Image running</span>
-            </div>
-          </div>
-
-          <div className="demo-window inspector-window">
-            <WindowTitle>World state</WindowTitle>
-            <dl>
+          <article className="reference-document">
+            <div className="reference-eyebrow">ATAXIA / REFERENCE</div>
+            <h3>
+              The world is
+              <br />
+              programmable.
+            </h3>
+            <p>
+              Read the running state. Move a window. Put a new interface around
+              the task.
+            </p>
+            <div className="reference-rule" />
+            <div className="reference-api">
+              <span>01</span>
               <div>
-                <dt>layout</dt>
-                <dd>{tiled ? 'tiled' : 'infinite'}</dd>
-              </div>
-              <div>
-                <dt>text</dt>
-                <dd>{largeType ? 'larger' : 'original'}</dd>
-              </div>
-              <div>
-                <dt>revision</dt>
-                <dd>{String(revision).padStart(2, '0')}</dd>
-              </div>
-            </dl>
-          </div>
-
-          {widget && (
-            <div
-              className="demo-window choice-window"
-              aria-label="Agent-created layout choice"
-            >
-              <WindowTitle detail="from your agent">A quick choice</WindowTitle>
-              <div className="choice-content">
-                <p>How do you want to work?</p>
-                <div className="choice-actions">
-                  <Button
-                    className="system-button primary-button"
-                    onClick={() => dispatch({ type: 'reply', tiled: true })}
-                  >
-                    Tiled layout
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="system-button"
-                    onClick={() => dispatch({ type: 'reply', tiled: false })}
-                  >
-                    Open canvas
-                  </Button>
-                </div>
-                <span>Your answer changes the workspace.</span>
+                <strong>Inspect</strong>
+                <p>Applications, surfaces, coordinates.</p>
               </div>
             </div>
-          )}
-          <div className="stage-coordinate" aria-hidden="true">
-            <span>{tiled ? 'Tiled world' : 'Infinite world'}</span>
-            <span>rev. {String(revision).padStart(2, '0')}</span>
-          </div>
+            <div className="reference-api">
+              <span>02</span>
+              <div>
+                <strong>Apply</strong>
+                <p>Change the world in the live image.</p>
+              </div>
+            </div>
+            <div className="reference-api">
+              <span>03</span>
+              <div>
+                <strong>Listen</strong>
+                <p>Receive input from native widgets.</p>
+              </div>
+            </div>
+            <a href={source} target="_blank" rel="noreferrer">
+              Read the interface <span aria-hidden="true">↗</span>
+            </a>
+          </article>
+        </SceneWindow>
+
+        <div className="world-bottom">
+          <span>1280 × 800 · world coordinates</span>
+          <span className="world-hint">
+            Drag the title bars. Then run the request.
+          </span>
         </div>
       </div>
-      <output className="desktop-status" aria-live="polite" aria-atomic="true">
-        <span className="status-square" aria-hidden="true" />
-        <span>{status}</span>
-        <span className="status-end">{activity}</span>
-      </output>
+      <div className="world-caption">
+        <span>Move a window. Run the request. Choose a layout.</span>
+        <Button
+          variant="ghost"
+          className="world-reset"
+          onClick={() => dispatch({ type: 'reset' })}
+        >
+          Reset workspace <span aria-hidden="true">↺</span>
+        </Button>
+      </div>
     </div>
   );
 }
